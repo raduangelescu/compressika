@@ -34,6 +34,67 @@ DWORD WINAPI timer_Update(void *Data)//tre sa fie null
 
 }
 BOOL InitInstance(HINSTANCE hInstance);
+DWORD WINAPI GenStat(void *Data)
+{
+
+		ThreadData*m_data=(ThreadData*)Data;
+		int currentAlgo= SendDlgItemMessage(m_data-> hParentWindow, IDC_LIST1, LB_GETCURSEL, 0, 0);
+		SetDlgItemText( hProgressWnd,IDC_DOGroup,"GENERATING CRC FILE..");
+		AlgoManager->Algos[currentAlgo]->GenerateCRCFile(m_data->FolderPath,m_data->FolderPathOut);
+		g_timer.Stop();
+		SetDlgItemText( hProgressWnd,IDC_DOGroup,"COMPRESSING..");
+		std::fstream fout("statistici.htm",std::ios::out);
+		fout<<"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /> <title>Statistici</title><link rel=\"stylesheet\" type=\"text/css\" href=\"stil.css\"/>";
+		fout<<"</head><body><div Id=\"DecorBara\"></div><div id=\"wrap\"><div id=\"header\"></div><div id=\"m_title\"><div id=\"m_Nume\"><img src=\"imagini/titlu.png\" width=\"256\" height=\"50\" /></div></div>";
+		fout<<"<div id=\"ContentR\">";
+		unsigned int initialsize=g_GetFileSize(m_data->FolderPath);
+		fout<<"<h3>Initial file size(bytes):</h3>"<<initialsize<<"\n";
+		for(unsigned int i=0;i<AlgoManager->Algos.size();i++)
+		{
+			std::string label="COMPRESSING WITH:";
+			label+=AlgoManager->Algos[i]->getName();
+			fout<<"<h3>"<<AlgoManager->Algos[i]->getName().c_str()<<"</h3>"<<"\n";
+			SetDlgItemText( hProgressWnd,IDC_DOGroup,label.c_str());
+			g_timer.Start();
+			AlgoManager->Algos[i]->Compress(m_data->FolderPath,m_data->FolderPathOut);
+			g_timer.Stop();
+			std::string timeform="";
+			g_timer.GetFormattedCurrentTime(timeform);
+			fout<<"<b>Timp compresie</b>:"<<timeform.c_str()<<"<br>\n";
+			SendDlgItemMessage( hProgressWnd, IDC_TOTAL_PROGRESS_BAR,  PBM_STEPIT  ,NULL, 0);
+			label="DECOMPRESSING WITH:";
+			label+=AlgoManager->Algos[i]->getName();
+			SetDlgItemText( hProgressWnd,IDC_DOGroup,label.c_str());
+			std::string out=m_data->FolderPath;
+			out+="_upk_";
+			out+=AlgoManager->Algos[i]->m_Ext;
+			
+			std::string in=m_data->FolderPathOut;
+			in+=AlgoManager->Algos[i]->m_Ext;
+			unsigned int compressedsize=g_GetFileSize(in);
+			g_timer.Start();
+			
+			AlgoManager->Algos[i]->DeCompress(in,out);
+			g_timer.Stop();
+			fout<<"<b>Marime fisier comprimat(bytes)</b>:"<<compressedsize<<"<br>\n";
+			fout<<"<b>Rata compresie:</b>"<<(float)compressedsize/initialsize<<"<br>\n";
+			timeform="";
+			g_timer.GetFormattedCurrentTime(timeform);
+			fout<<"<b>Timp decompresie:</b>"<<timeform.c_str()<<"<br>\n";
+			SendDlgItemMessage( hProgressWnd, IDC_TOTAL_PROGRESS_BAR,  PBM_STEPIT  ,NULL, 0);
+			fout<<"<hr />";
+		}
+		fout<<"</div><div id=\"Footer\"><div id=\"Copywright\"> @2012 Radu Angelescu </div></div></div></body></html>";
+		fout.close();
+		g_bRunning=FALSE;
+		SetDlgItemText( hProgressWnd,IDC_DOGroup,"Ready..");
+		delete m_data;
+		emptyData=NULL;
+		SetDlgItemText( hProgressWnd,	IDC_CANCELCOMPRESS,"Finish");
+		HINSTANCE r = ShellExecute(NULL, "open", "statistici.htm", NULL, NULL, SW_SHOWNORMAL);
+
+		return 1;
+}
 DWORD WINAPI Compress(void *Data)
 {
 
@@ -64,7 +125,11 @@ DWORD WINAPI Decompress(void *Data)
 		g_timer.Stop();
 		g_timer.Start();
 		SetDlgItemText( hProgressWnd,IDC_DOGroup,"CHECKING CRC FILE..");
-		int test=AlgoManager->Algos[currentAlgo]->CheckCRCFile(m_data->FolderPathOut,m_data->FolderPath);
+		char *crcfilename=(char*)m_data->FolderPath.c_str();
+		unsigned int len=strlen(crcfilename);
+		crcfilename[len-4]='\0';
+		std::string crcf=crcfilename;
+		int test=AlgoManager->Algos[currentAlgo]->CheckCRCFile(m_data->FolderPathOut,crcf);
 		g_timer.Stop();
 		g_bRunning=FALSE;
 		if(test)
@@ -80,6 +145,7 @@ DWORD WINAPI Decompress(void *Data)
 unsigned int last_progress_update=0;
 void UpdateFileProgressBar(unsigned int progress,unsigned int filesize)
 {
+	if(filesize!=0)
 	if(((progress*100)/filesize)-last_progress_update>=2)
 	{
 		last_progress_update=((progress*100)/filesize);
@@ -94,7 +160,28 @@ DWORD WINAPI ProgressDialog(void *Data)
 	if(!InitInstance( m_data->hInst))
 		return 0;
 	SendDlgItemMessage( hProgressWnd, IDC_FILE_PROGRESS_BAR, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
-
+	SendDlgItemMessage( hProgressWnd,IDC_TOTAL_PROGRESS_BAR, PBM_SETRANGE, 0, MAKELPARAM(0, AlgoManager->Algos.size()*2));
+	SendDlgItemMessage( hProgressWnd,IDC_TOTAL_PROGRESS_BAR, PBM_SETSTEP,(WPARAM) (int)1,NULL);
+	if(m_data->bStat)
+	{
+		g_timer.Start();
+		g_bRunning=TRUE;
+			ThreadHandle=CreateThread( 
+				 NULL,                   // default security attributes
+				  0,                      // use default stack size  
+				GenStat,       // thread function name
+				 Data,          // argument to thread function 
+				 0,                      // use default creation flags 
+				&ThreadID);   // returns the thread identifier 
+			ThreadHandleTimer=CreateThread( 
+				 NULL,                   // default security attributes
+				  0,                      // use default stack size  
+				 timer_Update,       // thread function name
+				 NULL,          // argument to thread function 
+				 0,                      // use default creation flags 
+				&ThreadIDTimer);   // returns the thread identifier 
+	}
+	else
 	if(m_data->bCompress)
 	{
 		g_timer.Start();

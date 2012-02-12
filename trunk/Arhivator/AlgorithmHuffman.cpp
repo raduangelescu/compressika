@@ -7,6 +7,7 @@ cAlgorithmHuffman m_globalTemplate;
 cAlgorithmHuffman::cAlgorithmHuffman():cAlgorithm()
 {
 	m_Name="Algorithm Huffman";
+	m_Ext=".huf";
 	
 }
 
@@ -19,8 +20,9 @@ int compareHuffman (const void * a, const void * b)
 
 void cAlgorithmHuffman::Compress(std::string filenameInput,std::string filenameOutput)
 {
+	filenameOutput+=m_Ext;
 	InitTree();															//se initializeaza nodurile arborelui
-
+	GetFileSize(filenameInput);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
 	cBitStreamSoup output(filenameOutput,"out");
 
@@ -28,8 +30,7 @@ void cAlgorithmHuffman::Compress(std::string filenameInput,std::string filenameO
 	CountBytes(input);													//se numara aparitia fiecarui simbol
 	ScaleCounts();														//se scaleaza numarul de aparitii si se pune in noduri
 	OutputCounts( output.m_File );
-	qsort (m_Nodes, 257, sizeof(cBinaryTreeNode), compareHuffman);		//se ordoneaza crescator primele 257 de elemente ale vectorului m_Nodes
-																		//functie standard c++ (iostream.h)
+	qsort (m_Nodes, 257, sizeof(cBinaryTreeNode), compareHuffman);		//se ordoneaza crescator primele 257 de elemente ale vectorului m_Nodes																			//functie standard c++ (iostream.h)
 	
 	BuildTree();
 
@@ -38,10 +39,12 @@ void cAlgorithmHuffman::Compress(std::string filenameInput,std::string filenameO
 	
 	input.close();
 	CleanUp();
+	m_CompressionProgress=0;
 }
 
 void cAlgorithmHuffman::DeCompress(std::string filenameInput,std::string filenameOutput)
 {
+	GetFileSize(filenameInput);
 	InitTree();
 	
 	cBitStreamSoup input(filenameInput,"in");
@@ -58,7 +61,7 @@ void cAlgorithmHuffman::DeCompress(std::string filenameInput,std::string filenam
 	output.close();
 	CleanUp();
 
-
+m_CompressionProgress=0;
 }
 
 //metoda initializeaza nodurile arborelui
@@ -238,6 +241,8 @@ void cAlgorithmHuffman::CompressData(std::fstream &input,cBitStreamSoup &output 
 	{
 		output.OutputBits((unsigned long) m_Codes[ c ].code,m_Codes[ c ].code_bits );
 		c=input.get();
+		m_CompressionProgress++;
+		UpdateFileProgressBar(m_CompressionProgress,m_FileSizeInBytes);
 	}
 	output.OutputBits((unsigned long) m_Codes[ END_OF_STREAM ].code,m_Codes[ END_OF_STREAM ].code_bits );
 }

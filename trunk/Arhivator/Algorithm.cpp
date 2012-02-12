@@ -12,7 +12,6 @@ cAlgorithm::cAlgorithm()
 
 int cAlgorithm::GenerateCRCVector(std::fstream &filein,std::fstream &out,CRC_Generate_Mode Mode)
 {
-	m_Crcvector.clear();
 	char block[BLOCK_SIZE];// facem crc checkingul pe blocuri de BLOCK_SIZE.. putem pe oricat
 	unsigned int curr=0;
 	block[curr++]=filein.get();

@@ -6,7 +6,6 @@
 #include "Algorithm.h"
 #include "AlgorithmsManager.h"
 #include "Timer.h"
-#include "ArchivingFileSystem.h"
 BOOL bThreadActive=FALSE;
 
 
@@ -272,7 +271,7 @@ BOOL CALLBACK MainDialogProc (HWND hwnd,
 		{
 		case IDC_BUTTONBROWSE:
 			GetFile(FolderPath,hwnd);
-			ARCHIVE_FILE_SYSTEM->AddFile(FolderPath);
+			SetDlgItemText( hwnd,IDC_FILEINPUTEDIT,FolderPath.c_str());
 			//GetFolder(FolderPath);	
 			break;
 		case IDC_BUTTONOUTPUT:
@@ -289,6 +288,7 @@ BOOL CALLBACK MainDialogProc (HWND hwnd,
 				Data->FolderPath=FolderPath;
 				Data->FolderPathOut=FolderPathOut;
 				Data->hInst=hInst;
+				Data->bStat=FALSE;
 				Data->hParentWindow=hwnd;
 				ProgressDialog(Data);
  
@@ -304,16 +304,31 @@ BOOL CALLBACK MainDialogProc (HWND hwnd,
 				Data->FolderPath=FolderPath;
 				Data->FolderPathOut=FolderPathOut;
 				Data->hInst=hInst;
+				Data->bStat=FALSE;
 				Data->hParentWindow=hwnd;
 				ProgressDialog(Data);
 	
 			
 			}			
 			break;
-		case IDC_ADDFOLDERBTN:
-			GetFolder(FolderPath,"Select Folder",hwnd);
-			ARCHIVE_FILE_SYSTEM->FindAllFiles(FolderPath);
+		case IDC_GENSTAT:
+			if(FolderPath.empty()||FolderPathOut.empty())
+				MessageBox(hwnd,"Nu ai selectat fisier!!","Selecteaza fisier",0);
+			else
+			{
+				ThreadData* Data=new ThreadData;
+				Data->bCompress=FALSE;
+				Data->FolderPath=FolderPath;
+				Data->FolderPathOut=FolderPathOut;
+				Data->hInst=hInst;
+				Data->bStat=TRUE;
+				Data->hParentWindow=hwnd;
+				ProgressDialog(Data);
+	
+			
+			}	
 			break;
+
 		} 
 	case WM_HSCROLL:
 		return 0;

@@ -31,5 +31,5 @@ public:
 	}
 	~cLogger();
 };
-
+unsigned int g_GetFileSize(std::string filename);
 #endif

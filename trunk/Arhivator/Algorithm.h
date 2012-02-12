@@ -10,10 +10,9 @@ enum CRC_Generate_Mode
 };
 class cAlgorithm
 {
-private:
-	std::vector <unsigned int> m_Crcvector;
 
 public:
+	std::string m_Ext;
 	cAlgorithm();
 	virtual ~cAlgorithm(){}
 	virtual void Compress(std::string filenameInput,std::string filenameOutput)=0;

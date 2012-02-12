@@ -5,6 +5,7 @@ cAlgorithmArithmetic m_globalTemplate;
 cAlgorithmArithmetic::cAlgorithmArithmetic():cAlgorithm()
 {
 	m_Name="Algorithm Arithmetic";
+	m_Ext=".ath";
 }
 
 
@@ -24,6 +25,8 @@ exact pentru asta
 */
 void cAlgorithmArithmetic:: Compress(std::string filenameInput,std::string filenameOutput)
 {
+	m_CompressionProgress=0;
+	filenameOutput+=m_Ext;
 	GetFileSize(filenameInput);
 	int c;
 	SYMBOL s;
@@ -60,17 +63,21 @@ La sfarsim trebuie sa scoate simbolul din decodor..
 */
 void cAlgorithmArithmetic::DeCompress(std::string filenameInput,std::string filenameOutput)
 {
+	m_CompressionProgress=0;
 	cBitStreamSoup input(filenameInput,"in");
 	std::fstream output(filenameOutput.c_str(),std::ios::out|std::ios::binary);
 	SYMBOL s;
 	int c;
 	int count;
+
 	InputCounts( input.m_File );
 	InitializeArithmeticDecoder( input );
 	while(TRUE)
 	{
 		GetSymbolScale( s );
 		count = GetCurrentCount( s );
+		m_CompressionProgress++;
+		UpdateFileProgressBar(m_CompressionProgress,m_FileSizeInBytes);
 		c = ConvertSymbolToInt( count, s );
 		if ( c == END_OF_STREAM )
 			break;
@@ -78,6 +85,7 @@ void cAlgorithmArithmetic::DeCompress(std::string filenameInput,std::string file
 		output.put((char)c);
 	}
 	output.close();
+	m_CompressionProgress=0;
 }
 /*
 Asta scaneaza input fileul , scale counturile , face vectorul totals si 

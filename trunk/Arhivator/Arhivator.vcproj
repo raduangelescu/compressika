@@ -173,6 +173,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\ABitmap.h"
+				>
+			</File>
+			<File
 				RelativePath=".\BinaryTree.cpp"
 				>
 			</File>
@@ -212,10 +216,6 @@
 				Name="GUI"
 				>
 				<File
-					RelativePath=".\ArchivingFileSystem.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\Arhivator.cpp"
 					>
 				</File>
@@ -243,7 +243,11 @@
 					Name="Algoritmi"
 					>
 					<File
-						RelativePath=".\AlgorithmArithmetic.cpp"
+						RelativePath=".\AlgorithmFractal.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\AlgorithmFractal.h"
 						>
 					</File>
 					<File
@@ -262,10 +266,6 @@
 						RelativePath=".\AlgorithmLZW.cpp"
 						>
 					</File>
-					<File
-						RelativePath=".\AlgorithmShannon.cpp"
-						>
-					</File>
 				</Filter>
 				<Filter
 					Name="Crc"
@@ -278,6 +278,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\ABitmap.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\BinaryTree.h"
 				>
@@ -317,10 +321,6 @@
 					Name="Algoritmi"
 					>
 					<File
-						RelativePath=".\AlgorithmArithmetic.h"
-						>
-					</File>
-					<File
 						RelativePath=".\AlgorithmHuffman.h"
 						>
 					</File>
@@ -336,10 +336,6 @@
 						RelativePath=".\AlgorithmLZW.h"
 						>
 					</File>
-					<File
-						RelativePath=".\AlgorithmShannon.h"
-						>
-					</File>
 				</Filter>
 				<Filter
 					Name="Crc"
@@ -353,10 +349,6 @@
 			<Filter
 				Name="GUI"
 				>
-				<File
-					RelativePath=".\ArchivingFileSystem.h"
-					>
-				</File>
 				<File
 					RelativePath=".\Arhivator.h"
 					>
@@ -386,6 +378,42 @@
 			</File>
 			<File
 				RelativePath=".\Arhivator.rc"
+				>
+			</File>
+			<File
+				RelativePath=".\bitmap1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\bitmap2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\bitmap3.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\icoana.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\icon1.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\marhivator.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\bin\imagini\marhivator.png"
+				>
+			</File>
+			<File
+				RelativePath="..\bin\imagini\monster-5.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\monster-5.ico"
 				>
 			</File>
 			<File
