@@ -5,11 +5,12 @@ cAlgorithmLZSS m_globalTemplate;
 cAlgorithmLZSS::cAlgorithmLZSS():cAlgorithm()
 {
 	m_Name="Algorithm LZSS";
+	m_Ext=".lzs";
 }
 void cAlgorithmLZSS::Compress(std::string filenameInput,std::string filenameOutput)
 {
 	GetFileSize(filenameInput);
-
+filenameOutput+=m_Ext;
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
 	cBitStreamSoup output(filenameOutput,"out");
 	CompressFile(input,output);
@@ -22,6 +23,7 @@ void cAlgorithmLZSS::DeCompress(std::string filenameInput,std::string filenameOu
 	std::fstream output(filenameOutput.c_str(),std::ios::out|std::ios::binary);
 	ExpandFile(input,output);
 	output.close();
+	m_CompressionProgress=0;
 }
 cAlgorithmLZSS::~cAlgorithmLZSS()
 {

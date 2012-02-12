@@ -6,6 +6,7 @@ cAlgorithmShannon m_globalTemplate;
 cAlgorithmShannon::cAlgorithmShannon():cAlgorithm()
 {
 	m_Name="Algorithm Shannon-Fano";
+	m_Ext=".shf";
 }
 void cAlgorithmShannon::CleanUp()
 {
@@ -35,7 +36,9 @@ int compare (const void * a, const void * b)
 
 void cAlgorithmShannon::Compress(std::string filenameInput,std::string filenameOutput)
 {
+		m_CompressionProgress=0;
 	GetFileSize(filenameInput);
+	filenameOutput+=m_Ext;
 	InitTree();
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
 	cBitStreamSoup output(filenameOutput,"out");
@@ -70,6 +73,7 @@ void cAlgorithmShannon::DeCompress(std::string filenameInput,std::string filenam
 	ExpandData( input, output, root_node );
 	output.close();
 	CleanUp();
+	m_CompressionProgress=0;
 }
 void cAlgorithmShannon::OutputCounts ( std::fstream &output )
 {

@@ -8,10 +8,20 @@ cAlgorithmHuffAdaptiv m_globalTemplate;
 cAlgorithmHuffAdaptiv::cAlgorithmHuffAdaptiv():cAlgorithm()
 {
 	m_Name="Algorithm Huffman Adaptiv";
+	m_Ext=".ahf";
 }
 void cAlgorithmHuffAdaptiv::Compress(std::string filenameInput,std::string filenameOutput)
 {
-		GetFileSize(filenameInput);
+	filenameOutput+=m_Ext;
+	GetFileSize(filenameInput);
+	HANDLE WINAPI LoadImage(
+		__in_opt  HINSTANCE hinst,
+		__in      LPCTSTR lpszName,
+		__in      UINT uType,
+		__in      int cxDesired,
+		__in      int cyDesired,
+		__in      UINT fuLoad
+		);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
 	cBitStreamSoup output(filenameOutput,"out");
 	CompressFile(input,output);
@@ -24,6 +34,7 @@ void cAlgorithmHuffAdaptiv::DeCompress(std::string filenameInput,std::string fil
 	std::fstream output(filenameOutput.c_str(),std::ios::out|std::ios::binary);	
 	ExpandFile(input,output);
 	output.close();
+	m_CompressionProgress=0;
 }
 cAlgorithmHuffAdaptiv::~cAlgorithmHuffAdaptiv()
 {

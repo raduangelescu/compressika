@@ -9,6 +9,7 @@ public:
 	std::string FolderPathOut;
 	BOOL bCompress;
 	HWND hParentWindow;
+	BOOL bStat;
 	ThreadData()
 	{
 	}

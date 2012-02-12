@@ -31,23 +31,23 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 // Dialog
 //
 
-IDD_MAINWINDOW DIALOGEX 0, 0, 389, 236
+IDD_MAINWINDOW DIALOGEX 0, 0, 242, 167
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Arhivator"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Add File",IDC_BUTTONBROWSE,205,202,45,14
-    LISTBOX         IDC_LIST1,31,25,153,52,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Compress",IDC_BUTTONCOMPRESS,25,153,50,14
-    PUSHBUTTON      "Uncompress",IDC_BUTTONUNCOMPRESS,89,154,50,14
-    GROUPBOX        "Algoritm",IDC_STATIC,21,7,173,81
-    PUSHBUTTON      "Browse",IDC_BUTTONOUTPUT,140,119,46,13
-    EDITTEXT        IDC_FILEOUTPUTEDIT,24,118,113,14,ES_RIGHT | ES_AUTOHSCROLL
-    CONTROL         "",IDC_TREE_ARCHIVE,"SysTreeView32",WS_BORDER | WS_HSCROLL | WS_TABSTOP,205,14,164,176
-    CONTROL         "GenerateCRCFile",IDC_CBOXCRC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,307,202,71,10
-    GROUPBOX        "Archive",IDC_STATIC,194,7,188,218
-    PUSHBUTTON      "Add Folder",IDC_ADDFOLDERBTN,252,201,50,14
-    GROUPBOX        "Output",IDC_STATIC,21,104,172,40
+    PUSHBUTTON      "Browse",IDC_BUTTONBROWSE,181,19,45,14
+    LTEXT           "File Input",IDC_STATIC,19,22,54,8
+    LISTBOX         IDC_LIST1,15,82,140,52,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Compress",IDC_BUTTONCOMPRESS,171,81,50,14
+    PUSHBUTTON      "Uncompress",IDC_BUTTONUNCOMPRESS,172,99,50,14
+    GROUPBOX        "Algoritm",IDC_STATIC,7,63,222,81
+    PUSHBUTTON      "Browse",IDC_BUTTONOUTPUT,181,41,46,13
+    LTEXT           "File Output",IDC_STATIC,19,44,52,9
+    LTEXT           "Ready..",IDC_STATUSTXT,7,148,228,12
+    EDITTEXT        IDC_FILEINPUTEDIT,61,20,114,14,ES_RIGHT | ES_AUTOHSCROLL
+    EDITTEXT        IDC_FILEOUTPUTEDIT,61,41,113,14,ES_RIGHT | ES_AUTOHSCROLL
+    PUSHBUTTON      "Statistics",IDC_GENSTAT,172,119,50,14
 END
 
 
@@ -62,9 +62,9 @@ BEGIN
     IDD_MAINWINDOW, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 382
+        RIGHTMARGIN, 235
         TOPMARGIN, 7
-        BOTTOMMARGIN, 229
+        BOTTOMMARGIN, 160
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -98,7 +98,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
 
-IDD_PROGRESS DIALOGEX 0, 0, 315, 148
+IDD_PROGRESS DIALOGEX 0, 0, 317, 156
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Progress"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -106,7 +106,7 @@ BEGIN
     CONTROL         "",IDC_TOTAL_PROGRESS_BAR,"msctls_progress32",PBS_SMOOTH | WS_BORDER,17,42,282,17
     LTEXT           "Overall Progress:",IDC_STATIC,19,28,183,8
     CONTROL         "",IDC_FILE_PROGRESS_BAR,"msctls_progress32",PBS_SMOOTH | WS_BORDER,18,81,282,16
-    GROUPBOX        "Static",IDC_DOGroup,7,7,301,134
+    GROUPBOX        "Static",IDC_DOGroup,7,7,303,142
     LTEXT           "File Progress:",IDC_STATIC,20,69,44,8
     LTEXT           "Time elapsed:",IDC_StaticTime,21,110,45,8
     LTEXT           "00:00:00",IDC_STATICTIMER,71,110,135,8
@@ -133,22 +133,13 @@ BEGIN
     IDD_PROGRESS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 308
+        RIGHTMARGIN, 310
         TOPMARGIN, 7
-        BOTTOMMARGIN, 141
+        BOTTOMMARGIN, 149
     END
 END
 #endif    // APSTUDIO_INVOKED
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_SMALL               ICON                    "small.ico"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -180,6 +171,22 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SMALL               ICON                    "icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "bitmap1.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

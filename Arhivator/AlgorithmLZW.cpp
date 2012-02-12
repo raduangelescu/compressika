@@ -5,10 +5,12 @@ cAlgorithmLZW m_globalTemplate;
 cAlgorithmLZW::cAlgorithmLZW():cAlgorithm()
 {
 	m_Name="Algorithm LZW";
+	m_Ext=".lzw";
 }
 void cAlgorithmLZW::Compress(std::string filenameInput,std::string filenameOutput)
 {
 	GetFileSize(filenameInput);
+	filenameOutput+=m_Ext;
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
 	cBitStreamSoup output(filenameOutput,"out");
 	CompressFile(input,output);
@@ -21,6 +23,7 @@ void cAlgorithmLZW::DeCompress(std::string filenameInput,std::string filenameOut
 	std::fstream output(filenameOutput.c_str(),std::ios::out|std::ios::binary);	
 	ExpandFile(input,output);
 	output.close();
+	m_CompressionProgress=0;
 }
 cAlgorithmLZW::~cAlgorithmLZW()//strangem dupa noi
 {
