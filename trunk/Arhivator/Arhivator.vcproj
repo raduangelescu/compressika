@@ -381,10 +381,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\bitmap1.bmp"
-				>
-			</File>
-			<File
 				RelativePath=".\bitmap2.bmp"
 				>
 			</File>
@@ -409,11 +405,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\bin\imagini\monster-5.ico"
+				RelativePath=".\monster-5.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\monster-5.ico"
+				RelativePath="..\bin\imagini\monster-5.ico"
 				>
 			</File>
 			<File
