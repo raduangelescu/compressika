@@ -45,8 +45,6 @@ void cAlgorithmFractal::DeCompress(std::string filenameInput,std::string filenam
 void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 {
 	frac_file= &output;
-	double quality = 2.0; /* factor de calitate */
-	int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
 	
 	int x_size = m_inputImage->_width; /* marimea orizontala a  imaginii */
 	int y_size = m_inputImage->_height; /* marimea verticala a imaginii */
@@ -59,25 +57,33 @@ void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 	{
 		assert(0);// ("Marimea imaginilor trebuie sa fie multiplu de 4\n");
 	}
-	/* Aloca si initializeaza datele imaginii si a imaginii cumulative */
-	CompressInit(x_size, y_size, input);
-	/* Initializeaza marimea domeniului ca in decomprimare*/
-	DominfoInit(x_size, y_size, dom_density);
-	/* Clasifica domeniile: */
-	for (s = MIN_BITS; s <= MAX_BITS; s++)
-	{
-		ClassifyDomains(x_size, y_size, s);
-	}
-	/*Scriem headerul fisierului comprimat. */
 	output.OutputBits((unsigned long)'F', 8);
 	output.OutputBits((unsigned long)x_size, 16);
 	output.OutputBits((unsigned long )y_size,16);
-	output.OutputBits((unsigned long)dom_density,2);
-	/* Comprimam imaginea recursiv */
-	max_error2 = quality*quality;
-	TraverseImage(0, 0, x_size, y_size,COMPRESS_RANGE);
-	/* Eliberam memoria: */
-	CompressCleanup(y_size);
+	// facem asta pe toate canalele r g b
+	for (unsigned int i =0 ; i<3 ; i++)
+	{
+		double quality = 2.0; /* factor de calitate */
+		int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
+	
+		/* Aloca si initializeaza datele imaginii si a imaginii cumulative */
+		CompressInit(x_size, y_size, input,i);
+		/* Initializeaza marimea domeniului ca in decomprimare*/
+		DominfoInit(x_size, y_size, dom_density);
+		/* Clasifica domeniile: */
+		for (s = MIN_BITS; s <= MAX_BITS; s++)
+		{
+			ClassifyDomains(x_size, y_size, s);
+		}
+		/*Scriem headerul fisierului comprimat. */
+
+		output.OutputBits((unsigned long)dom_density,2);
+		/* Comprimam imaginea recursiv */
+		max_error2 = quality*quality;
+		TraverseImage(0, 0, x_size, y_size,COMPRESS_RANGE);
+		/* Eliberam memoria: */
+		CompressCleanup(y_size);
+	}
 }
 /* ================================================================
 Elibereaza toate structurile alocate dinamic pentru compresie.
@@ -99,8 +105,14 @@ void cAlgorithmFractal::CompressCleanup(int y_size)
 				next = dom->next;
 				free(dom);
 			}
+	range = NULL;
+	domain = NULL;
+	cum_range = NULL;
+	cum_range2 = NULL;
+	dom_density = NULL;
+	max_error2 = NULL;
 }
-void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_file)
+void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_file,int channel)
 {
 	int x, y; /* indicii pe orizontala si pe verticala*/
 	unsigned long r_sum; /*data pentru partitia cumulativa si domeniu*/
@@ -117,20 +129,12 @@ void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_
 	cum_domain2 = (float**)allocate(y_size/2+1, x_size/2+1,
 		sizeof(float));
 	/* Citim imaginile de input: */
-	CImg<unsigned char> red=m_inputImage->get_channel(0);
-	
-	cimg_forY(*m_inputImage,y)
-		cimg_forX(*m_inputImage,x)
+	CImg<unsigned char> _chanel=m_inputImage->get_channel(channel);
+	cimg_forY(_chanel,y)
+		cimg_forX(_chanel,x)
 	{
-		range[x][y] = red(x,y);
+		range[x][y] = _chanel(x,y);
 	}
-	//for (y = 0; y < y_size; y++) 
-	//{
-	//	m_inputImage
-	//	for(x = 0 ; x < x_size ; x++)
-	//		range[x][y]=(m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbRed+m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbBlue+m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbGreen)/3;
-		
-	//}
 	/*Calculam imaginea domeniului din cea a partitiei. Fiecare pixel in imaginea domeniu este suma
 	a 4 pixeli din imaginea partitiei. Nu facem media (adica nu impartim la 4) ca sa nu pierdem precizie	
 	*/
@@ -224,7 +228,6 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 	int y_size; /* marimea imaginii pe verticala */
 	int x_dsize; /* marimea imaginii decomprimata pe orizontala */
 	int y_dsize; /* marimea imaginii decomprimata pe verticala*/
-	int iterations = 16; /* numarul de iteratii*/
 	int y; /* randul curent care este inscris pe hddisc */
 	/*Citim headerul fisierului fractal:*/
 	frac_file = &input;
@@ -234,77 +237,48 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 	}
 	x_size = (int)frac_file->InputBits( 16);
 	y_size = (int)frac_file->InputBits( 16);
-	dom_density = (int)frac_file->InputBits( 2);
-	/* Alocam imaginea scalata: */
-	x_dsize = x_size * image_scale;
-	y_dsize = y_size * image_scale;
-	range = (unsigned char**)allocate(y_dsize, x_dsize, sizeof(unsigned char));
 
-	/*Initializam informatia domeniului ca in compresor*/
-	DominfoInit(x_size, y_size, dom_density);
-	/*Citim toate maparile afine folosind aceeasi traversare recursiva a imaginii ca in compresor */
-	TraverseImage(0, 0, x_size, y_size, DECOMPRESS_RANGE);
-	for(int i=0;i< x_dsize ;i++)
-		for(int j=0 ; j< y_size ; j++)
-			range[i][j] = 255;
-	/*Iteram toate maparile afine pe imaginea initiala (care e random) Astfel ca 
-	fiindca toate maparile afine sunt contractive, procesul converge*/
-	while (iterations-- > 0) 
-		RefineImage();
-	/* Smoothuim tranzitiile intre marginile partitiilor vecine:*/
-	AverageBoundaries();
-	/* Scriem fisierul decomprimat: */
-
-		//Create a new file for writing
-
-	FILE *pFile = fopen("unpack.bmp", "wb");
-	if(pFile == NULL)
-		{
-		assert(0);	
-	}
-		BITMAPINFOHEADER BMIH;
-		BMIH.biSize = sizeof(BITMAPINFOHEADER);
-		BMIH.biBitCount = 24;
-		BMIH.biPlanes = 1;
-		BMIH.biCompression = BI_RGB;
-		BMIH.biWidth = x_size;
-		BMIH.biHeight = y_size;
-		BMIH.biSizeImage = ((((BMIH.biWidth * BMIH.biBitCount) + 31) & ~31) >> 3) * BMIH.biHeight;
-		BITMAPFILEHEADER bmfh;
-		int nBitsOffset = sizeof(BITMAPFILEHEADER) +sizeof(BITMAPINFOHEADER);
-		LONG lImageSize = BMIH.biSizeImage; 
-		LONG lFileSize = nBitsOffset + lImageSize;
-		bmfh.bfType = 'B'+('M'<<8);
-		bmfh.bfOffBits = nBitsOffset;
-		bmfh.bfSize = lFileSize;
-		bmfh.bfReserved1 = bmfh.bfReserved2 = 0;
-		//Write the bitmap file header
-
-		UINT nWrittenFileHeaderSize = fwrite(&bmfh, 1, sizeof(BITMAPFILEHEADER), pFile);
-		//And then the bitmap info header
-
-		UINT nWrittenInfoHeaderSize = fwrite(&BMIH, 1, sizeof(BITMAPINFOHEADER), pFile);
-		//Finally, write the image data itself 
-
-		//-- the data represents our drawing
-
+	// facem asta pe toate canalele r g b
 	
-	
-	
-	for (y = y_dsize-1; y >=0 ; y--)
+
+	for (unsigned int i =0 ; i< 3 ; i++)
 	{
-		output.write((const char*)range[y],x_dsize);
-		for(int x=0 ; x< x_dsize;x++)
-		{
-			UINT nWrittenDIBDataSize = fwrite(&range[x][y], 1,1, pFile);
-			nWrittenDIBDataSize = fwrite(&range[x][y], 1,1, pFile);
-			nWrittenDIBDataSize = fwrite(&range[x][y], 1,1, pFile);
-		}
+		CImg<unsigned char> out(x_size,y_size);
+		int iterations = 16; /* numarul de iteratii*/
+		//CImg<unsigned char> &chan = out.channel(i);
+		dom_density = (int)frac_file->InputBits( 2);
+		/* Alocam imaginea scalata: */
+		x_dsize = x_size * image_scale;
+		y_dsize = y_size * image_scale;
+		range = (unsigned char**)allocate(y_dsize, x_dsize, sizeof(unsigned char));
 
+		/*Initializam informatia domeniului ca in compresor*/
+		DominfoInit(x_size, y_size, dom_density);
+		/*Citim toate maparile afine folosind aceeasi traversare recursiva a imaginii ca in compresor */
+		TraverseImage(0, 0, x_size, y_size, DECOMPRESS_RANGE);
+		for(int i=0;i< x_dsize ;i++)
+			for(int j=0 ; j< y_size ; j++)
+				range[i][j] = 255;
+		/*Iteram toate maparile afine pe imaginea initiala (care e random) Astfel ca 
+		fiindca toate maparile afine sunt contractive, procesul converge*/
+		while (iterations-- > 0) 
+			RefineImage();
+		/* Smoothuim tranzitiile intre marginile partitiilor vecine:*/
+		AverageBoundaries();
+
+		cimg_forY(out,y)
+			cimg_forX(out,x)
+		{
+			out(x,y) =range[x][y];
+		}
+		FreeArray((void**)range, y_dsize);
+		dom_density = 0;
+		out.save("testUnpk.bmp");
 	}
-		fclose(pFile);
-	/*Curatam memoria: */
-	FreeArray((void**)range, y_dsize);
+	/* Scriem fisierul decomprimat: */
+	
+
+	
 }
 cAlgorithmFractal::~cAlgorithmFractal()
 {
