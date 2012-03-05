@@ -102,7 +102,7 @@ class cAlgorithmFractal: cAlgorithm
 		void ExpandFile( cBitStreamSoup &input, std::fstream &output );
 
 		/*Pentru Compresie*/
-		void CompressInit(int x_size, int y_size,std::fstream &t); 
+		void CompressInit(int x_size, int y_size,std::fstream &t,int channel); 
 		void CompressCleanup (int y_size);
 		void ClassifyDomains (int x_size, int y_size, int s);
 		int FindClass (int x, int y, int size);
