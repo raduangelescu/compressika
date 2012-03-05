@@ -42,7 +42,8 @@ Daca folosim marimi mai mici atunci obtinem compresie mai buna dar calitatea ima
 long
 */
 #define square(pixel) (unsigned long)(pixel)*(pixel)
-
+template <class T>
+struct cimg_library::CImg;
 // Algoritmul fractal
 class cAlgorithmFractal: cAlgorithm
 {
@@ -52,6 +53,7 @@ class cAlgorithmFractal: cAlgorithm
 		void DeCompress(std::string filenameInput,std::string filenameOutput);
 		virtual ~cAlgorithmFractal();
 	private:
+		cimg_library::CImg<unsigned char> * m_inputImage;
 	/* data din partitie : range[i][j] este luminozitatea la randul i si coloana j*/
 		unsigned char **range;
 	/* Data domeniului este sumata peste 4 pixeli: domain[i][j] este suma valorilor pixelilor 

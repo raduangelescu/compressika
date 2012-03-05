@@ -5,6 +5,9 @@
 #include <math.h>
 #define COMPRESS_RANGE 0
 #define DECOMPRESS_RANGE 1
+
+using namespace cimg_library ;
+
 cAlgorithmFractal m_globalTemplate;
 /*
 Factorul de scalare pentru decompresie (marimea decomprimata impartita la marimea originala)
@@ -21,12 +24,15 @@ void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameO
 	filenameOutput+=m_Ext;
 	GetFileSize(filenameInput);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
-	m_Bitmap.LoadBMP( (char*)filenameInput.c_str());
+	//m_Bitmap.LoadBMP( (char*)filenameInput.c_str());
+	CImg<unsigned char> img(filenameInput.c_str());
+	m_inputImage = &img ;
 	cBitStreamSoup output(filenameOutput,"out");
 
 	CompressFile(input,output);
 	input.close();
 	m_CompressionProgress=0;
+	
 }
 void cAlgorithmFractal::DeCompress(std::string filenameInput,std::string filenameOutput)
 {
@@ -41,8 +47,9 @@ void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 	frac_file= &output;
 	double quality = 2.0; /* factor de calitate */
 	int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
-	int x_size = m_Bitmap.getWidth(); /* marimea orizontala a  imaginii */
-	int y_size = m_Bitmap.getHeight(); /* marimea verticala a imaginii */
+	
+	int x_size = m_inputImage->_width; /* marimea orizontala a  imaginii */
+	int y_size = m_inputImage->_height; /* marimea verticala a imaginii */
 
 	if (dom_density < 0 || dom_density > 2) 
 	{
@@ -110,12 +117,20 @@ void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_
 	cum_domain2 = (float**)allocate(y_size/2+1, x_size/2+1,
 		sizeof(float));
 	/* Citim imaginile de input: */
-	for (y = 0; y < y_size; y++) 
+	CImg<unsigned char> red=m_inputImage->get_channel(0);
+	
+	cimg_forY(*m_inputImage,y)
+		cimg_forX(*m_inputImage,x)
 	{
-		for(x = 0 ; x < x_size ; x++)
-			range[x][y]=(m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbRed+m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbBlue+m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbGreen)/3;
-		
+		range[x][y] = red(x,y);
 	}
+	//for (y = 0; y < y_size; y++) 
+	//{
+	//	m_inputImage
+	//	for(x = 0 ; x < x_size ; x++)
+	//		range[x][y]=(m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbRed+m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbBlue+m_Bitmap.Palette[m_Bitmap.Raster[y*m_Bitmap.getWidth()+x]].rgbGreen)/3;
+		
+	//}
 	/*Calculam imaginea domeniului din cea a partitiei. Fiecare pixel in imaginea domeniu este suma
 	a 4 pixeli din imaginea partitiei. Nu facem media (adica nu impartim la 4) ca sa nu pierdem precizie	
 	*/
