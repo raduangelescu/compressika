@@ -22,7 +22,7 @@
 #include<shlobj.h>
 
 #include <fstream>
-
+#include <CImg.h>
 #define _CRTDBG_MAP_ALLOC // nuj ce are asta .. tb sa arate si numele fisierului de leak :(.. mai vedem
 						// poate gasesti tu ce are... poate nici nu o sa avem leakuri si nu avem nevoie :))
 
