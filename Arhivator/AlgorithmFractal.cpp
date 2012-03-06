@@ -21,6 +21,29 @@ cAlgorithmFractal::cAlgorithmFractal():cAlgorithm(),dom_density(0)
 }
 void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameOutput)
 {
+	
+	domain_data *dom, *next; /* pointeri la domenii*/
+	range = NULL;
+	domain = NULL;
+	cum_range = NULL;
+	cum_range2 = NULL;
+	dom_density = NULL;
+	max_error2 = NULL;
+	cum_domain2 = NULL;
+	for(unsigned int i = 0 ;i< MAX_BITS+1 ; i++)
+	{
+		dom_info[i].pos_bits = 0;
+		dom_info[i].x_domains = 0;
+	}
+	for (unsigned int s = MIN_BITS; s <= MAX_BITS; s++)
+		for (unsigned int classa = 0; classa < NCLASSES; classa++)
+			for (dom = domain_head[classa][s]; dom != NULL; dom = next)
+			{
+				if(dom)
+				{
+					domain_head[classa][s] = NULL;
+				}
+			}
 	filenameOutput+=m_Ext;
 	GetFileSize(filenameInput);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
@@ -35,6 +58,29 @@ void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameO
 }
 void cAlgorithmFractal::DeCompress(std::string filenameInput,std::string filenameOutput)
 {
+	
+	domain_data *dom, *next; /* pointeri la domenii*/
+	range = NULL;
+	domain = NULL;
+	cum_range = NULL;
+	cum_range2 = NULL;
+	dom_density = NULL;
+	max_error2 = NULL;
+	cum_domain2 = NULL;
+	for(unsigned int i = 0 ;i< MAX_BITS+1 ; i++)
+	{
+		dom_info[i].pos_bits = 0;
+		dom_info[i].x_domains = 0;
+	}
+	for (unsigned int s = MIN_BITS; s <= MAX_BITS; s++)
+		for (unsigned int classa = 0; classa < NCLASSES; classa++)
+			for (dom = domain_head[classa][s]; dom != NULL; dom = next)
+			{
+				if(dom)
+				{
+					domain_head[classa][s] = NULL;
+				}
+			}
 	cBitStreamSoup input(filenameInput,"in");
 	std::fstream output(filenameOutput.c_str(),std::ios::out|std::ios::binary);	
 	ExpandFile(input,output);
@@ -101,8 +147,13 @@ void cAlgorithmFractal::CompressCleanup(int y_size)
 		for (classa = 0; classa < NCLASSES; classa++)
 			for (dom = domain_head[classa][s]; dom != NULL; dom = next)
 			{
-				next = dom->next;
-				free(dom);
+				if(dom)
+				{
+					next = dom->next;
+					free(dom);
+					dom = NULL;
+					domain_head[classa][s] = NULL;
+				}
 			}
 	range = NULL;
 	domain = NULL;
@@ -110,6 +161,12 @@ void cAlgorithmFractal::CompressCleanup(int y_size)
 	cum_range2 = NULL;
 	dom_density = NULL;
 	max_error2 = NULL;
+	cum_domain2 = NULL;
+	for(unsigned int i = 0 ;i< MAX_BITS+1 ; i++)
+	{
+		dom_info[i].pos_bits = 0;
+		dom_info[i].x_domains = 0;
+	}
 }
 void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_file,int channel)
 {
@@ -133,6 +190,20 @@ void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_
 		cimg_forX(_chanel,x)
 	{
 		range[x][y] = _chanel(x,y);
+	}
+			switch ( channel)
+		{
+			case 0:
+				_chanel.save("inR.bmp");
+				break;
+			case 1:
+				_chanel.save("inG.bmp");
+			
+				break;
+			case 2:
+				_chanel.save("inB.bmp");
+			
+				break;
 	}
 	/*Calculam imaginea domeniului din cea a partitiei. Fiecare pixel in imaginea domeniu este suma
 	a 4 pixeli din imaginea partitiei. Nu facem media (adica nu impartim la 4) ca sa nu pierdem precizie	
@@ -227,7 +298,6 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 	int y_size; /* marimea imaginii pe verticala */
 	int x_dsize; /* marimea imaginii decomprimata pe orizontala */
 	int y_dsize; /* marimea imaginii decomprimata pe verticala*/
-	int y; /* randul curent care este inscris pe hddisc */
 	/*Citim headerul fisierului fractal:*/
 	frac_file = &input;
 	if (frac_file->InputBits( 8) != 'F') 
@@ -240,7 +310,7 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 	// facem asta pe toate canalele r g b
 	
 
-	for (unsigned int i =0 ; i< 3 ; i++)
+	for (unsigned int c =0 ; c< 3 ; c++)
 	{
 		CImg<unsigned char> out(x_size,y_size);
 		int iterations = 16; /* numarul de iteratii*/
@@ -270,9 +340,24 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 		{
 			out(x,y) =range[x][y];
 		}
-		FreeArray((void**)range, y_dsize);
+		CompressCleanup(y_dsize);
+		//FreeArray((void**)range, y_dsize);
 		dom_density = 0;
-		out.save("testUnpk.bmp");
+		switch ( c)
+		{
+			case 0:
+				out.save("testR.bmp");
+				break;
+			case 1:
+				out.save("testG.bmp");
+			
+				break;
+			case 2:
+				out.save("testB.bmp");
+			
+				break;
+	}
+		
 	}
 	/* Scriem fisierul decomprimat: */
 	
@@ -728,10 +813,14 @@ void **cAlgorithmFractal::allocate(int rows,int columns,int elem_size)
 */
 void cAlgorithmFractal::FreeArray(void **array,int rows)
 {
-	int row;
-	for (row = 0; row < rows; row++)
+	if(array)
 	{
-		free(array[row]);
+		int row;
+		for (row = 0; row < rows; row++)
+		{
+			free(array[row]);
+		}
+		array = NULL;
 	}
 }
 /* =============================================================
