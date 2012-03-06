@@ -24,7 +24,6 @@ void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameO
 	filenameOutput+=m_Ext;
 	GetFileSize(filenameInput);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
-	//m_Bitmap.LoadBMP( (char*)filenameInput.c_str());
 	CImg<unsigned char> img(filenameInput.c_str());
 	m_inputImage = &img ;
 	cBitStreamSoup output(filenameOutput,"out");

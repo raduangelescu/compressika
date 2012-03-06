@@ -47,7 +47,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				OpenMP="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -122,7 +122,7 @@
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				OpenMP="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -176,10 +176,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath=".\ABitmap.h"
-				>
-			</File>
 			<File
 				RelativePath=".\BinaryTree.cpp"
 				>
@@ -282,10 +278,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\ABitmap.cpp"
-				>
-			</File>
 			<File
 				RelativePath=".\BinaryTree.h"
 				>
@@ -409,11 +401,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\monster-5.ico"
+				RelativePath="..\bin\imagini\monster-5.ico"
 				>
 			</File>
 			<File
-				RelativePath="..\bin\imagini\monster-5.ico"
+				RelativePath=".\monster-5.ico"
 				>
 			</File>
 			<File
