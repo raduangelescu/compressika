@@ -124,8 +124,5 @@ class cAlgorithmFractal: cAlgorithm
 		void FreeArray (void **array, int rows);	
 		int BitLength (unsigned long val);
 		
-		
-		CBitmapRaster  m_Bitmap;
-
 };
 #endif
