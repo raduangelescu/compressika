@@ -3,12 +3,12 @@
 
 = Introduction =
 
-Add your content here.
+This is the main Compressika page.
 
 
-= Details =
+= About =
+This project was started by Radu Angelescu. The main purpose of this project is to develop an efficient fractal based image compression algorithm.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+= Tutorial on How to use Compressika = 
+= Tutorial about Compressika code structure =
+= Writting code for Compressika = 
