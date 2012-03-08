@@ -22,28 +22,6 @@ cAlgorithmFractal::cAlgorithmFractal():cAlgorithm(),dom_density(0)
 void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameOutput)
 {
 	
-	domain_data *dom, *next; /* pointeri la domenii*/
-	range = NULL;
-	domain = NULL;
-	cum_range = NULL;
-	cum_range2 = NULL;
-	dom_density = NULL;
-	max_error2 = NULL;
-	cum_domain2 = NULL;
-	for(unsigned int i = 0 ;i< MAX_BITS+1 ; i++)
-	{
-		dom_info[i].pos_bits = 0;
-		dom_info[i].x_domains = 0;
-	}
-	for (unsigned int s = MIN_BITS; s <= MAX_BITS; s++)
-		for (unsigned int classa = 0; classa < NCLASSES; classa++)
-			for (dom = domain_head[classa][s]; dom != NULL; dom = next)
-			{
-				if(dom)
-				{
-					domain_head[classa][s] = NULL;
-				}
-			}
 	filenameOutput+=m_Ext;
 	GetFileSize(filenameInput);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
@@ -58,39 +36,15 @@ void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameO
 }
 void cAlgorithmFractal::DeCompress(std::string filenameInput,std::string filenameOutput)
 {
-	
-	domain_data *dom, *next; /* pointeri la domenii*/
-	range = NULL;
-	domain = NULL;
-	cum_range = NULL;
-	cum_range2 = NULL;
-	dom_density = NULL;
-	max_error2 = NULL;
-	cum_domain2 = NULL;
-	for(unsigned int i = 0 ;i< MAX_BITS+1 ; i++)
-	{
-		dom_info[i].pos_bits = 0;
-		dom_info[i].x_domains = 0;
-	}
-	for (unsigned int s = MIN_BITS; s <= MAX_BITS; s++)
-		for (unsigned int classa = 0; classa < NCLASSES; classa++)
-			for (dom = domain_head[classa][s]; dom != NULL; dom = next)
-			{
-				if(dom)
-				{
-					domain_head[classa][s] = NULL;
-				}
-			}
+
 	cBitStreamSoup input(filenameInput,"in");
-	std::fstream output(filenameOutput.c_str(),std::ios::out|std::ios::binary);	
-	ExpandFile(input,output);
-	output.close();
+	ExpandFile(input,filenameOutput);
 	m_CompressionProgress=0;
 }
 void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 {
-	frac_file= &output;
-	
+	frac_file = &output;
+
 	int x_size = m_inputImage->_width; /* marimea orizontala a  imaginii */
 	int y_size = m_inputImage->_height; /* marimea verticala a imaginii */
 
@@ -102,12 +56,17 @@ void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 	{
 		assert(0);// ("Marimea imaginilor trebuie sa fie multiplu de 4\n");
 	}
-	output.OutputBits((unsigned long)'F', 8);
-	output.OutputBits((unsigned long)x_size, 16);
-	output.OutputBits((unsigned long )y_size,16);
 	// facem asta pe toate canalele r g b
-	for (unsigned int i =0 ; i<3 ; i++)
+	
+
+	frac_file->OutputBits((unsigned long)'F', 8);
+	frac_file->OutputBits((unsigned long)x_size, 16);
+	frac_file->OutputBits((unsigned long )y_size,16);
+
+	//#pragma omp parallel for 
+	for (int i =0 ; i<3 ; i++)
 	{
+		
 		double quality = 2.0; /* factor de calitate */
 		int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
 	
@@ -122,7 +81,7 @@ void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 		}
 		/*Scriem headerul fisierului comprimat. */
 
-		output.OutputBits((unsigned long)dom_density,2);
+		frac_file->OutputBits((unsigned long)dom_density,2);
 		/* Comprimam imaginea recursiv */
 		max_error2 = quality*quality;
 		TraverseImage(0, 0, x_size, y_size,COMPRESS_RANGE);
@@ -167,6 +126,9 @@ void cAlgorithmFractal::CompressCleanup(int y_size)
 		dom_info[i].pos_bits = 0;
 		dom_info[i].x_domains = 0;
 	}
+
+	map_head = NULL;
+
 }
 void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_file,int channel)
 {
@@ -191,20 +153,7 @@ void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_
 	{
 		range[x][y] = _chanel(x,y);
 	}
-			switch ( channel)
-		{
-			case 0:
-				_chanel.save("inR.bmp");
-				break;
-			case 1:
-				_chanel.save("inG.bmp");
-			
-				break;
-			case 2:
-				_chanel.save("inB.bmp");
-			
-				break;
-	}
+	
 	/*Calculam imaginea domeniului din cea a partitiei. Fiecare pixel in imaginea domeniu este suma
 	a 4 pixeli din imaginea partitiei. Nu facem media (adica nu impartim la 4) ca sa nu pierdem precizie	
 	*/
@@ -292,8 +241,10 @@ void cAlgorithmFractal::ClassifyDomains(int x_size,int y_size,int s)
 			}
 		}
 }
-void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output )
+
+void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::string &outputSTR )
 {
+
 	int x_size; /* marimea imaginii pe orizontala */
 	int y_size; /* marimea imaginii pe verticala */
 	int x_dsize; /* marimea imaginii decomprimata pe orizontala */
@@ -308,11 +259,11 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 	y_size = (int)frac_file->InputBits( 16);
 
 	// facem asta pe toate canalele r g b
-	
-
+	CImg<unsigned char> out(x_size,y_size,1,3);
+		
 	for (unsigned int c =0 ; c< 3 ; c++)
-	{
-		CImg<unsigned char> out(x_size,y_size);
+	{	
+		
 		int iterations = 16; /* numarul de iteratii*/
 		//CImg<unsigned char> &chan = out.channel(i);
 		dom_density = (int)frac_file->InputBits( 2);
@@ -334,31 +285,20 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::fstream &output 
 			RefineImage();
 		/* Smoothuim tranzitiile intre marginile partitiilor vecine:*/
 		AverageBoundaries();
-
+		
 		cimg_forY(out,y)
 			cimg_forX(out,x)
 		{
-			out(x,y) =range[x][y];
+			out(x,y,0,c) =range[x][y];
 		}
 		CompressCleanup(y_dsize);
 		//FreeArray((void**)range, y_dsize);
 		dom_density = 0;
-		switch ( c)
-		{
-			case 0:
-				out.save("testR.bmp");
-				break;
-			case 1:
-				out.save("testG.bmp");
-			
-				break;
-			case 2:
-				out.save("testB.bmp");
-			
-				break;
-	}
+		
 		
 	}
+	std::string filename = outputSTR.append( ".bmp");
+	out.save((const char*)filename.c_str() );
 	/* Scriem fisierul decomprimat: */
 	
 
@@ -539,24 +479,7 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 /* Functii pentru decompresie */
 /************************************/
 
-/*
-O mapare afina este descrisa de contrast, offset luminozitate, o partitie si un domeniu.
-COntrastul si luminozitatea sunt tinute ca int pentru a face rapida decompresia pe procesoare
-cu floating point incet.
-*/
-typedef struct map_info_struct 
-{
-	int contrast; /*contrastul e scalat cu 16384 (pentru a pastra precizia)*/
-	int brightness; /*offsetul de luminozitate e scalat cu 128*/
-	int x; /*pozitie orizontala a partitiei horizontal position of the range */
-	int y;/*pozitie verticala a partitiei horizontal position of the range */
-	int size; /* marime partitie*/
-	int dom_x; /* pozitia oriziontala a domeniului*/
-	int dom_y; /* pozitia verticala a domeniului*/
-	struct map_info_struct *next; /*urmatoarea mapare*/
-} map_info;
 
-map_info *map_head = NULL; /*primul element din lista inlantuita*/
 /* Citeste maparea afina pentru partitie sau imparte partitia daca compresorul a facut asta in compress_range()
 */
 void cAlgorithmFractal::DecompressRange(int x,int y,int s_log)

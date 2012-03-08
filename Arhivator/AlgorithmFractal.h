@@ -75,6 +75,22 @@ private:
 		int brightness; 
 		double error2;
 	};
+	/*
+	O mapare afina este descrisa de contrast, offset luminozitate, o partitie si un domeniu.
+	COntrastul si luminozitatea sunt tinute ca int pentru a face rapida decompresia pe procesoare
+	cu floating point incet.
+	*/
+	struct map_info
+	{
+		int contrast; /*contrastul e scalat cu 16384 (pentru a pastra precizia)*/
+		int brightness; /*offsetul de luminozitate e scalat cu 128*/
+		int x; /*pozitie orizontala a partitiei horizontal position of the range */
+		int y;/*pozitie verticala a partitiei horizontal position of the range */
+		int size; /* marime partitie*/
+		int dom_x; /* pozitia oriziontala a domeniului*/
+		int dom_y; /* pozitia verticala a domeniului*/
+		struct map_info *next; /*urmatoarea mapare*/
+	} ;
 
 public:
 	cAlgorithmFractal();
@@ -101,10 +117,11 @@ private:
 	domain_info dom_info[MAX_BITS+1];
 	cBitStreamSoup *frac_file;
 	domain_data *domain_head[NCLASSES][MAX_BITS+1];
+	map_info *map_head; /*primul element din lista inlantuita*/
 
 private:
 	void CompressFile( std::fstream &input, cBitStreamSoup &output);
-	void ExpandFile( cBitStreamSoup &input, std::fstream &output );
+	void ExpandFile( cBitStreamSoup &input, std::string &output );
 
 	/*Pentru Compresie*/
 	void CompressInit(int x_size, int y_size,std::fstream &t,int channel); 
