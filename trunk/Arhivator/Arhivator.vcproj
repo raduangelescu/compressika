@@ -115,7 +115,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\lib\CImg\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
@@ -401,11 +401,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\bin\imagini\monster-5.ico"
+				RelativePath=".\monster-5.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\monster-5.ico"
+				RelativePath="..\bin\imagini\monster-5.ico"
 				>
 			</File>
 			<File

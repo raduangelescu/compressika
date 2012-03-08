@@ -121,7 +121,8 @@ DWORD WINAPI Decompress(void *Data)
 		int currentAlgo= SendDlgItemMessage(m_data-> hParentWindow, IDC_LIST1, LB_GETCURSEL, 0, 0);
 		SetDlgItemText( hProgressWnd,IDC_DOGroup,"DECOMPRESSING..");
 		g_timer.Start();
-		AlgoManager->Algos[currentAlgo]->DeCompress(m_data->FolderPath,m_data->FolderPathOut);
+		cAlgorithm * crtAlg = AlgoManager->Algos[currentAlgo];
+		crtAlg->DeCompress(m_data->FolderPath,m_data->FolderPathOut);
 		g_timer.Stop();
 		g_timer.Start();
 		SetDlgItemText( hProgressWnd,IDC_DOGroup,"CHECKING CRC FILE..");
