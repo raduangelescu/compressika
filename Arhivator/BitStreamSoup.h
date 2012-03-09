@@ -1,7 +1,11 @@
 #ifndef C_BITSTREAMSOUP
 #define C_BITSTREAMSOUP
 #include "Utile.h"
-enum FILEMODE{INPUT_FILE,OUTPUT_FILE};
+enum FILEMODE
+{
+	INPUT_FILE,
+	OUTPUT_FILE,
+};
 /*
 clasa care se ocupa cu scrierea in fisier binar a bitilor elementul masca este initializat
 cu  0x80 la deschiderea fisierului.La output prima scriere in fisier va seta sau sterge acel
@@ -25,9 +29,13 @@ class cBitStreamSoup
 							// in final ar trebuii sa contina numarul de bytes al fisierului
 							//NOTA: poate fi folosit si ca verificare
 	unsigned int m_FileSizeInBytes;
+	
+	unsigned char *m_Buffer;
+	int			   m_BufferSize;
+	unsigned int m_crtBuffEl;
 public:
 	std::fstream m_File;
-	cBitStreamSoup(std::string filename,std::string mod);
+	cBitStreamSoup(std::string filename,std::string mod,int bufferSize = 1024);
 	void OutputBit( int bit ); 
 	void OutputBits(unsigned long code, int count); 
 	void GetFileSize(std::string filename);

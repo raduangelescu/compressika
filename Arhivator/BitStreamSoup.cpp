@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "BitStreamSoup.h"
 #include "Progress.h"
-cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod)
+cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod,int bufferSize)
 {
 	m_Mod=-1;
 	
@@ -32,7 +32,13 @@ cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod)
 		log+=filename;
 		LOG(log);
 	}
-		
+	m_BufferSize = bufferSize;
+	m_Buffer = NULL;
+	m_crtBuffEl = 0;
+	if(m_BufferSize > 0 )
+	{
+		m_Buffer = new unsigned char[m_BufferSize];
+	}
 }
 void cBitStreamSoup::OutputBit(int bit)
 {
@@ -41,7 +47,20 @@ void cBitStreamSoup::OutputBit(int bit)
    m_Mask >>= 1; // o shiftam
    if ( m_Mask == 0 )
    {
-		m_File.put( m_Rack); //scriem byteul fiindca inseamna ca am shiftat pana am completat tot byteul  
+	   if(!m_Buffer)
+	   {
+		   m_File.put( m_Rack); //scriem byteul fiindca inseamna ca am shiftat pana am completat tot byteul  
+	   }
+	   else
+	   {
+		   m_Buffer[m_crtBuffEl] = m_Rack;
+		   m_crtBuffEl++;
+		   if(m_crtBuffEl >= m_BufferSize)
+		   {
+			   m_File.write((char*)m_Buffer,m_BufferSize);
+			   m_crtBuffEl = 0;
+		   }
+	   }
 		m_PacifierCounter++ ;// aici e progresul..
    }
    if(m_Mask==0)
@@ -62,7 +81,20 @@ void cBitStreamSoup::OutputBits(unsigned long code, int count)
 	m_Mask >>= 1; 
 	if (m_Mask == 0 ) 
 	{
-		m_File.put( m_Rack ) ;
+		if(!m_Buffer)
+		{
+			m_File.put( m_Rack ) ;
+		}
+		else
+		{
+			m_Buffer[m_crtBuffEl] = m_Rack;
+			m_crtBuffEl++;
+			if(m_crtBuffEl >= m_BufferSize)
+			{
+				m_File.write((char*)m_Buffer,m_BufferSize);
+				m_crtBuffEl = 0;
+			}
+		}
 		m_PacifierCounter++;
 		m_Rack = 0; 
         m_Mask = 0x80;  
@@ -139,10 +171,20 @@ cBitStreamSoup::~cBitStreamSoup()
 {
 	if(m_Mod==1)
 	{
+		if (m_Buffer)
+		{
+			if(m_crtBuffEl < m_BufferSize)
+			{
+				m_File.write((char*)m_Buffer,m_crtBuffEl);
+			}
+		}
 		if ( m_Mask != 0x80 ) 
 			m_File.put(m_Rack); 
 	}
 	m_File.close();  
+	
+	if(m_Buffer)
+		delete [] m_Buffer;
 }
 // Functia asta nu e neaparat exacta.. adica poate arata mai marf fisierele
 // decat sunt , si mai are dezavantajul ca maxim o sa putem pe unsigned int
