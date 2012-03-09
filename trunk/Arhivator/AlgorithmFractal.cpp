@@ -62,9 +62,10 @@ void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 	frac_file->OutputBits((unsigned long)'F', 8);
 	frac_file->OutputBits((unsigned long)x_size, 16);
 	frac_file->OutputBits((unsigned long )y_size,16);
+	
 
 	//#pragma omp parallel for 
-	for (int i =0 ; i<3 ; i++)
+	for (	int i =0 ; i<3 ; i++)
 	{
 		
 		double quality = 2.0; /* factor de calitate */
@@ -366,6 +367,7 @@ void cAlgorithmFractal::CompressRange(int x,int y, int s_log)
 #ifdef COMPLETE_SEARCH
 	for (classa = 0; classa < NCLASSES; classa++)
 #endif
+
 		for (dom = domain_head[classa][s_log]; dom != NULL; dom =dom->next) 
 		{
 			/*Gaseste maparea optima de la partitie la domeniu */
