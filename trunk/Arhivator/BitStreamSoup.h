@@ -5,6 +5,7 @@ enum FILEMODE
 {
 	INPUT_FILE,
 	OUTPUT_FILE,
+	OUTPUT_BUFFER
 };
 /*
 clasa care se ocupa cu scrierea in fisier binar a bitilor elementul masca este initializat
@@ -29,18 +30,21 @@ class cBitStreamSoup
 							// in final ar trebuii sa contina numarul de bytes al fisierului
 							//NOTA: poate fi folosit si ca verificare
 	unsigned int m_FileSizeInBytes;
+	unsigned int m_LeftFileSizeInBytes;
 	
 	unsigned char *m_Buffer;
-	int			   m_BufferSize;
+	unsigned int   m_BufferSize;
 	unsigned int m_crtBuffEl;
 public:
 	std::fstream m_File;
-	cBitStreamSoup(std::string filename,std::string mod,int bufferSize = 1024);
+	cBitStreamSoup(std::string filename,std::string mod,int bufferSize = FILE_BUFFER_SIZE);
 	void OutputBit( int bit ); 
 	void OutputBits(unsigned long code, int count); 
 	void GetFileSize(std::string filename);
 	int  InputBit(); 
 	unsigned long   InputBits(int bit_count );
+
+	void  AppendToFile(std::fstream &file);
 	void  FilePrintBinary( unsigned int code, int bits); 
  
 	~ cBitStreamSoup();

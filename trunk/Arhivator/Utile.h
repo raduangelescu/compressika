@@ -32,4 +32,7 @@ public:
 	~cLogger();
 };
 unsigned int g_GetFileSize(std::string filename);
+
+#define FILE_BUFFER_SIZE 1024
+
 #endif

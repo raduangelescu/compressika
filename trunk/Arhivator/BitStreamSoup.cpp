@@ -4,11 +4,21 @@
 cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod,int bufferSize)
 {
 	m_Mod=-1;
-	
+	m_BufferSize = bufferSize;
+	m_Rack = 0; 
+	m_Mask = 0x80;
+	m_PacifierCounter=0;
+
 	if(mod.compare("in")==0)
 	{
 		m_File.open(filename.c_str(),std::ios::in|std::ios::binary);
 		GetFileSize(filename);
+		m_LeftFileSizeInBytes  = m_FileSizeInBytes;
+		// Citeste tot fisierul in memorie
+		if(bufferSize == -1)
+		{
+			bufferSize = m_LeftFileSizeInBytes;
+		}
 		m_Mod=INPUT_FILE;
 	}
 	if(mod.compare("out")==0)
@@ -16,29 +26,48 @@ cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod,int bufferS
 		m_File.open(filename.c_str(),std::ios::out|std::ios::binary);
 		m_Mod=OUTPUT_FILE;
 	}
-	if(m_File.is_open())
+	if(mod.compare("out-buffer")==0)
 	{
-		std::string log="File ";
-		log+=filename;
-		log+=" Opened";
-		LOG(log);// logam ceva sa fim siguri ca s-a deschis fisieru
-		m_Rack = 0; 
-		m_Mask = 0x80;
-		m_PacifierCounter=0;
+		m_Mod = OUTPUT_BUFFER;
+	}
+	if(m_Mod != OUTPUT_BUFFER)
+	{
+		if(m_File.is_open())
+		{
+			std::string log="File ";
+			log+=filename;
+			log+=" Opened";
+			LOG(log);// logam ceva sa fim siguri ca s-a deschis fisieru
+		
+			m_Buffer = NULL;
+			m_crtBuffEl = 0;
+			if(m_BufferSize > 0 )
+			{
+				m_Buffer = new unsigned char[m_BufferSize];
+			}
+
+			if(m_Mod == INPUT_FILE)
+				m_File.read((char*)m_Buffer,m_BufferSize);
+		}
+		else
+		{
+			std::string log="Could not open file: ";
+			log+=filename;
+			LOG(log);
+		}
 	}
 	else
 	{
-		std::string log="Could not open file: ";
-		log+=filename;
-		LOG(log);
+		m_Rack = 0; 
+		m_Mask = 0x80;
+		m_Buffer = NULL;
+		
+		if(m_BufferSize > 0 )
+		{
+			m_Buffer = new unsigned char[m_BufferSize];
+		}
 	}
-	m_BufferSize = bufferSize;
-	m_Buffer = NULL;
-	m_crtBuffEl = 0;
-	if(m_BufferSize > 0 )
-	{
-		m_Buffer = new unsigned char[m_BufferSize];
-	}
+
 }
 void cBitStreamSoup::OutputBit(int bit)
 {
@@ -57,8 +86,19 @@ void cBitStreamSoup::OutputBit(int bit)
 		   m_crtBuffEl++;
 		   if(m_crtBuffEl >= m_BufferSize)
 		   {
-			   m_File.write((char*)m_Buffer,m_BufferSize);
-			   m_crtBuffEl = 0;
+			   if(m_Mod != OUTPUT_BUFFER)
+			   {
+				   m_File.write((char*)m_Buffer,m_BufferSize);
+				   m_crtBuffEl = 0;
+			   }
+			   else // reallocate Buffer
+			   {
+				 unsigned char *temp = m_Buffer;
+				 m_BufferSize = m_BufferSize*2;
+				 m_Buffer = new unsigned char[m_BufferSize];
+				 memcpy(m_Buffer,temp,m_BufferSize/2);
+				 delete []temp;
+			   }
 		   }
 	   }
 		m_PacifierCounter++ ;// aici e progresul..
@@ -91,8 +131,19 @@ void cBitStreamSoup::OutputBits(unsigned long code, int count)
 			m_crtBuffEl++;
 			if(m_crtBuffEl >= m_BufferSize)
 			{
-				m_File.write((char*)m_Buffer,m_BufferSize);
-				m_crtBuffEl = 0;
+				if(m_Mod != OUTPUT_BUFFER)
+				{
+					m_File.write((char*)m_Buffer,m_BufferSize);
+					m_crtBuffEl = 0;
+				}
+				else // reallocate Buffer
+				{
+					unsigned char *temp = m_Buffer;
+					m_BufferSize = m_BufferSize*2;
+					m_Buffer = new unsigned char[m_BufferSize];
+					memcpy(m_Buffer,temp,m_BufferSize/2);
+					delete []temp;
+				}
 			}
 		}
 		m_PacifierCounter++;
@@ -108,8 +159,38 @@ void cBitStreamSoup::OutputBits(unsigned long code, int count)
      int value; 
      if ( m_Mask == 0x80 ) 
 	 { 
-          m_Rack = m_File.get(); 
-          if ( m_Rack == EOF ) 
+		 if(!m_Buffer)
+		 {
+			 m_Rack = m_File.get(); 
+		 }
+		 else
+		 {
+			if(m_crtBuffEl < m_BufferSize)
+			{
+				m_Rack = m_Buffer[m_crtBuffEl];
+				m_crtBuffEl++;
+			}
+			else
+			{
+				m_crtBuffEl = 0;
+				if(m_LeftFileSizeInBytes > 0)
+				{
+					m_BufferSize = (m_LeftFileSizeInBytes - m_BufferSize) < m_BufferSize ?
+									(m_LeftFileSizeInBytes - m_BufferSize) : m_BufferSize;
+					m_File.read((char*)m_Buffer,m_BufferSize);
+					m_LeftFileSizeInBytes -= m_BufferSize;
+					
+					m_Rack = m_Buffer[m_crtBuffEl];
+					m_crtBuffEl++;
+		
+				}
+				else
+				{
+					assert(0 && "PROBLEM WITH INPUTING FROM ALGO!!");
+				}
+			}
+		 }
+		 if ( m_Rack == EOF ) 
 		  {
                LOG( "am terminat fisieru.. ar cam tb schimbat sistemul asta" );
 		  }
@@ -135,15 +216,46 @@ void cBitStreamSoup::OutputBits(unsigned long code, int count)
      return_value = 0; 
      while ( mask != 0)
 	 { 
-          if ( m_Mask == 0x80 )
-		  { 
-              m_Rack = m_File.get(); 
-               if ( m_Rack == EOF ) 
-                    LOG( "Fatal error in InputBit!" ); 
-				m_PacifierCounter++ ;
-         if(m_Mod==INPUT_FILE)
-			  UpdateFileProgressBar(m_PacifierCounter,m_FileSizeInBytes);
-          } 
+		 if ( m_Mask == 0x80 )
+		 { 			
+			 if(!m_Buffer)
+			 {
+				 m_Rack = m_File.get(); 
+			 }
+			 else
+			 {
+				 if(m_crtBuffEl < m_BufferSize)
+				 {
+					 m_Rack = m_Buffer[m_crtBuffEl];
+					 m_crtBuffEl++;
+				 }
+				 else
+				 {
+					 m_crtBuffEl = 0;
+					 if(m_LeftFileSizeInBytes > 0)
+					 {
+						 m_BufferSize = (m_LeftFileSizeInBytes - m_BufferSize) < m_BufferSize ?
+							 (m_LeftFileSizeInBytes - m_BufferSize) : m_BufferSize;
+						 m_File.read((char*)m_Buffer,m_BufferSize);
+						 m_LeftFileSizeInBytes -= m_BufferSize;
+
+						 m_Rack = m_Buffer[m_crtBuffEl];
+						 m_crtBuffEl++;
+
+					 }
+					 else
+					 {
+						 assert(0 && "PROBLEM WITH INPUTING FROM ALGO!!");
+					 }
+				 }
+			 }
+			 if ( m_Rack == EOF ) 
+				 LOG( "Fatal error in InputBit!" ); 
+			 m_PacifierCounter++ ;
+			 if(m_Mod==INPUT_FILE)
+				 UpdateFileProgressBar(m_PacifierCounter,m_FileSizeInBytes);
+		 } 
+
           if ( m_Rack & m_Mask ) 
                return_value |=mask; 
           mask >>= 1; 
@@ -166,10 +278,18 @@ void cBitStreamSoup::OutputBits(unsigned long code, int count)
          mask >>= 1; 
      } 
 }
- // ne-am jucat si acum strangem dupa noi 
+ //appendez bufferul curent la un fisier
+ void cBitStreamSoup::AppendToFile(std::fstream &file)
+ {
+	 m_File.write((char*)m_Buffer,m_crtBuffEl);
+	 
+	 if ( m_Mask != 0x80 ) 
+		m_File.put(m_Rack);
+ }
+// ne-am jucat si acum strangem dupa noi 
 cBitStreamSoup::~cBitStreamSoup()
 {
-	if(m_Mod==1)
+	if(m_Mod==OUTPUT_FILE)
 	{
 		if (m_Buffer)
 		{
