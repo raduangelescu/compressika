@@ -14,6 +14,7 @@
 // daca folosesti algoritmii std de sortare si gasire in std::vectori sau std::list
 // astia o sa ruleze foarte incet pe versiunea Debug daca  nu faci _HAS_ITERATOR_DEBUGGING 0
 // C RunTime Header Files
+#include <omp.h>
 
 #include <stdlib.h>
 #include <malloc.h>
@@ -29,6 +30,7 @@
 #include <stdlib.h>
 #include <Commdlg.h> // pentru dialogurile de open file, save file (browse)
 
+#include <assert.h>
 #include <crtdbg.h>
 #define new DEBUG_NEW
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)

@@ -112,10 +112,6 @@ cu butonul de Compress respectiv Decompress
 Daca iti plac algoritmii de compresie nici nu tb sa iti bati capul cu altceva
 decat cu ei :)
 
-Implementarea de CRC , nu va fi ca un algoritm de compresie... aia va avea clasa ei
-separata, deocamdata nu sunt 100% in tema cu CRC-ul..
-
-
 
 Inainte sa fiti rebeli... ganditi-va la faptul ca am un velociraptor
                                ___......__             _
