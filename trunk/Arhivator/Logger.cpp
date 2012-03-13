@@ -27,3 +27,38 @@ unsigned int g_GetFileSize(std::string filename)
 	return static_cast<unsigned int>(f.tellg() - begin_pos);
 	f.close();
 }
+/* =============================================================
+* Da numarul de biti necesar reprezentarii unui intreg:
+* 0 to 1 -> 1,
+* 2 to 3 -> 2,
+* 3 to 7 -> 3, etc...
+* Se poate mai rapid cu tabel de lookup.
+*/
+int BitLength(unsigned long val)
+{
+	int bits = 1;
+	if (val > 0xffff)
+	{
+		bits += 16;
+		val >>= 16;
+	}	
+
+	if (val > 0xff)
+	{
+		bits += 8;
+		val >>= 8;
+	}
+	if (val > 0xf)
+	{
+		bits += 4;
+		val >>= 4;
+	}
+	if (val > 0x3)
+	{
+		bits += 2;
+		val >>= 2;
+	}
+	if (val > 0x1) 
+		bits += 1;
+	return bits;
+}

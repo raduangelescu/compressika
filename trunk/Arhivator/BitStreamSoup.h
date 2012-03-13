@@ -16,6 +16,7 @@ m_Rack
 */
 class cBitStreamSoup
 {
+public:
 	int m_Mod;// modul de deschidere a fisierului (input sau output).. 
 				// poate fi folosit cu FILEMODE
 	//MSB este primul bit, LSB e ultimul
@@ -40,11 +41,13 @@ public:
 	cBitStreamSoup(std::string filename,std::string mod,int bufferSize = FILE_BUFFER_SIZE);
 	void OutputBit( int bit ); 
 	void OutputBits(unsigned long code, int count); 
+	void OutputBytes(unsigned char *bytes,int count);
 	void GetFileSize(std::string filename);
 	int  InputBit(); 
 	unsigned long   InputBits(int bit_count );
 
-	void  AppendToFile(std::fstream &file);
+	void  AppendToFile(cBitStreamSoup *fileBS);
+	void  ForceWrite();
 	void  FilePrintBinary( unsigned int code, int bits); 
  
 	~ cBitStreamSoup();

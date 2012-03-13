@@ -91,7 +91,31 @@ private:
 		int dom_y; /* pozitia verticala a domeniului*/
 		struct map_info *next; /*urmatoarea mapare*/
 	} ;
+	struct sNonShareData
+	{
+		/* data din partitie : range[i][j] este luminozitatea la randul i si coloana j*/
+		unsigned char **range;
+		/* Data domeniului este sumata peste 4 pixeli: domain[i][j] este suma valorilor pixelilor 
+		* de la (2j, 2i), (2j+1, 2i), (2j, 2i+1) and (2j+1, 2i+1)*/
+		unsigned **domain;
+		/*Datele cumulative pentru partitii sunt pastrate doar pt pixeli de la coordonate pare.
+		* cum_range[i][j] este suma tuturor valorilor de pixeli strict deasupra si in stanga pixelului
+		* (2j, 2i). In particular, cum_range[y_size/2][x_size/2] este
+		* suma tuturor valorilor de pixeli din imagine.Acest tabel este folosit si pentru cumulative domain data.*/
+		unsigned long **cum_range;
+		/* similar cu cum_range1*/
+		float **cum_range2;
+		float **cum_domain2;
+		int dom_density;
+		double max_error2;
+		domain_info dom_info[MAX_BITS+1];
 
+		domain_data *domain_head[NCLASSES][MAX_BITS+1];
+		map_info *map_head; /*primul element din lista inlantuita*/
+		
+		sNonShareData();
+		void Cleanup(unsigned int y_size);
+	};
 public:
 	cAlgorithmFractal();
 	void Compress(std::string filenameInput,std::string filenameOutput);
@@ -99,52 +123,41 @@ public:
 	virtual ~cAlgorithmFractal();
 private:
 	cimg_library::CImg<unsigned char> * m_inputImage;
-	/* data din partitie : range[i][j] este luminozitatea la randul i si coloana j*/
-	unsigned char **range;
-	/* Data domeniului este sumata peste 4 pixeli: domain[i][j] este suma valorilor pixelilor 
-	* de la (2j, 2i), (2j+1, 2i), (2j, 2i+1) and (2j+1, 2i+1)*/
-	unsigned **domain;
-	/*Datele cumulative pentru partitii sunt pastrate doar pt pixeli de la coordonate pare.
-	* cum_range[i][j] este suma tuturor valorilor de pixeli strict deasupra si in stanga pixelului
-	* (2j, 2i). In particular, cum_range[y_size/2][x_size/2] este
-	* suma tuturor valorilor de pixeli din imagine.Acest tabel este folosit si pentru cumulative domain data.*/
-	unsigned long **cum_range;
-	/* similar cu cum_range1*/
-	float **cum_range2;
-	float **cum_domain2;
-	int dom_density;
-	double max_error2;
-	domain_info dom_info[MAX_BITS+1];
-	cBitStreamSoup *frac_file;
-	domain_data *domain_head[NCLASSES][MAX_BITS+1];
-	map_info *map_head; /*primul element din lista inlantuita*/
+	// we need copys for each channel
+
+
+	
+	//static cBitStreamSoup *frac_file;
+	//static sNonShareData   *ns_data;
+	
+	sNonShareData  *rgb_data[3];
+	cBitStreamSoup *rgb_files[3];
 
 private:
 	void CompressFile( std::fstream &input, cBitStreamSoup &output);
-	void ExpandFile( cBitStreamSoup &input, std::string &output );
+	void ExpandFile( cBitStreamSoup &input, std::string &output);
 
 	/*Pentru Compresie*/
-	void CompressInit(int x_size, int y_size,std::fstream &t,int channel); 
+	void CompressInit(int x_size, int y_size,std::fstream &t,int channel,sNonShareData   *ns_data); 
 	void CompressCleanup (int y_size);
-	void ClassifyDomains (int x_size, int y_size, int s);
-	int FindClass (int x, int y, int size);
-	void CompressRange(int x, int y, int s_log);
-	void FindMap (range_data *rangep, domain_data *dom, affine_map *map);
+	void ClassifyDomains (int x_size, int y_size, int s,sNonShareData   *ns_data);
+	int FindClass (int x, int y, int size, sNonShareData   *ns_data);
+	void CompressRange(int x, int y, int s_log, sNonShareData   *ns_data,cBitStreamSoup * frac_file);
+	void FindMap (range_data *rangep, domain_data *dom, affine_map *map,sNonShareData   *ns_data);
 
 	/*Pentru Decompresie*/
-	void DecompressRange (int x, int y, int s_log);
-	void RefineImage (void);
-	void AverageBoundaries (void);
+	void DecompressRange (int x, int y, int s_log,sNonShareData   *ns_data,cBitStreamSoup *frac_file);
+	void RefineImage (sNonShareData  *ns_data);
+	void AverageBoundaries (	sNonShareData  *ns_data);
 
 	/*Functii comune compresie-decompresie*/
 
-	void TraverseImage (int x, int y, int x_size, int y_size,int whatToDo);
+	void TraverseImage (int x, int y, int x_size, int y_size,int whatToDo,	sNonShareData  *ns_data,cBitStreamSoup *frac_file);
 	int Quantize (double value, double max, int imax);
-	void DominfoInit (int x_size, int y_size, int density);
+	void DominfoInit (int x_size, int y_size, int density,sNonShareData  *ns_data);
 	void *xalloc (unsigned size);
 	void **allocate (int rows, int columns, int elem_size);
-	void FreeArray (void **array, int rows);	
-	int BitLength (unsigned long val);
+	static void FreeArray (void **array, int rows);
 
 };
 #endif
