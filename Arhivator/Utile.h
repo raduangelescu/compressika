@@ -9,8 +9,10 @@
 #define CLOGGER123
 #define LOGFILE "Log.txt"
 #define END_OF_STREAM 256
+
 // clasa folosita pt scris in fisierul de log
 #define LOG cLogger::getSingleton()->Log
+
 class cLogger
 {
 	static cLogger * m_Singleton;
@@ -31,10 +33,19 @@ public:
 	}
 	~cLogger();
 };
+
 unsigned int g_GetFileSize(std::string filename);
 int BitLength(unsigned long val);
 
 #define FILE_BUFFER_SIZE 1024
 #define NUM_THREADS 4
 
+enum E_CHANNELS
+{
+	E_R_CHANNEL,
+	E_G_CHANNEL,
+	E_B_CHANNEL,
+// tine asta ultima
+	E_NUM_CHANNELS
+};
 #endif

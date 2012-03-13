@@ -116,20 +116,17 @@ private:
 		sNonShareData();
 		void Cleanup(unsigned int y_size);
 	};
+
 public:
 	cAlgorithmFractal();
 	void Compress(std::string filenameInput,std::string filenameOutput);
 	void DeCompress(std::string filenameInput,std::string filenameOutput);
 	virtual ~cAlgorithmFractal();
+
 private:
 	cimg_library::CImg<unsigned char> * m_inputImage;
+
 	// we need copys for each channel
-
-
-	
-	//static cBitStreamSoup *frac_file;
-	//static sNonShareData   *ns_data;
-	
 	sNonShareData  *rgb_data[3];
 	cBitStreamSoup *rgb_files[3];
 

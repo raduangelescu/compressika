@@ -8,6 +8,7 @@ cAlgorithm::cAlgorithm()
 {
 	AlgoManager->AddAlgorithm(this);
 	m_CompressionProgress=0;
+	m_isLossy = false;
 }
 
 int cAlgorithm::GenerateCRCVector(std::fstream &filein,std::fstream &out,CRC_Generate_Mode Mode)
@@ -54,24 +55,31 @@ int cAlgorithm::GenerateCRCVector(std::fstream &filein,std::fstream &out,CRC_Gen
 }
 int cAlgorithm::CheckCRCFile(std::string filenameInput,std::string fileout)
 {
-	std::fstream in(filenameInput.c_str(),std::ios::in|std::ios::binary);
-	std::string crcf=fileout;
-	crcf+=".crc";
-	std::fstream out(crcf.c_str(),std::ios::in);
-	int ret=GenerateCRCVector(in,out,CHECK);
-	in.close();
-	out.close();
-	return ret;
+	if(!m_isLossy)
+	{
+		std::fstream in(filenameInput.c_str(),std::ios::in|std::ios::binary);
+		std::string crcf=fileout;
+		crcf+=".crc";
+		std::fstream out(crcf.c_str(),std::ios::in);
+		int ret=GenerateCRCVector(in,out,CHECK);
+		in.close();
+		out.close();
+		return ret;
+	}
+	return 1;
 }
 void cAlgorithm::GenerateCRCFile(std::string filenameInput,std::string filenameOutput)
 {
-	std::fstream in(filenameInput.c_str(),std::ios::in|std::ios::binary);
-	std::string crcf=filenameOutput;
-	crcf+=".crc";
-	std::fstream out(crcf.c_str(),std::ios::out);
-	GenerateCRCVector(in,out,GENERATE);
-	in.close();
-	out.close();
+	if(!m_isLossy)
+	{
+		std::fstream in(filenameInput.c_str(),std::ios::in|std::ios::binary);
+		std::string crcf=filenameOutput;
+		crcf+=".crc";
+		std::fstream out(crcf.c_str(),std::ios::out);
+		GenerateCRCVector(in,out,GENERATE);
+		in.close();
+		out.close();
+	}
 }
 // Functia asta nu e neaparat exacta.. adica poate arata mai marf fisierele
 // decat sunt , si mai are dezavantajul ca maxim o sa putem pe unsigned int

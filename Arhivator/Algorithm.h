@@ -12,6 +12,7 @@ class cAlgorithm
 {
 
 public:
+	bool		m_isLossy;
 	std::string m_Ext;
 	cAlgorithm();
 	virtual ~cAlgorithm(){}

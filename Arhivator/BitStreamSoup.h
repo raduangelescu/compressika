@@ -19,24 +19,26 @@ class cBitStreamSoup
 public:
 	int m_Mod;// modul de deschidere a fisierului (input sau output).. 
 				// poate fi folosit cu FILEMODE
-	//MSB este primul bit, LSB e ultimul
+				//MSB este primul bit, LSB e ultimul
     int m_Rack; // contine byteul current care asteapta sa fie scris in fisier
 				//(in cazul fisierelor de iesire) sau care e citit din fisier
 				// (pentru fisierele de intrare)
-	unsigned char m_Mask; //contine masca unui singur bit folosita pentru a pune sau a
+	unsigned char	m_Mask; //contine masca unui singur bit folosita pentru a pune sau a
 						  // sterge bitul curent de output , sau masca pentru bitul
 						 // curent de input
-    unsigned int m_PacifierCounter; // variabila asta se foloseste in general sa vedem progresul
+    unsigned int	m_PacifierCounter; // variabila asta se foloseste in general sa vedem progresul
 							// se incrementeaza odata la fiecare scriere/citire de 1 byte
 							// in final ar trebuii sa contina numarul de bytes al fisierului
 							//NOTA: poate fi folosit si ca verificare
-	unsigned int m_FileSizeInBytes;
-	unsigned int m_LeftFileSizeInBytes;
+	unsigned int	m_FileSizeInBytes;
+	unsigned int	m_LeftFileSizeInBytes;
 	
-	unsigned char *m_Buffer;
-	unsigned int   m_BufferSize;
-	unsigned int m_crtBuffEl;
+	unsigned char	*m_Buffer;
+	unsigned int	m_BufferSize;
+	unsigned int	m_crtBuffEl;
+
 public:
+
 	std::fstream m_File;
 	cBitStreamSoup(std::string filename,std::string mod,int bufferSize = FILE_BUFFER_SIZE);
 	void OutputBit( int bit ); 

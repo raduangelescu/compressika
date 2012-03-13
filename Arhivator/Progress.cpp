@@ -25,9 +25,9 @@ DWORD WINAPI timer_Update(void *Data)//tre sa fie null
 		{
 			oldtime=g_timer.m_clocks;
 			// nu facem updateul la timer non stop fiindca flikare..
-		std::string ftime;
-		g_timer.GetFormattedCurrentTime(ftime);
-		SetDlgItemText( hProgressWnd,IDC_STATICTIMER,ftime.c_str());
+		//std::string ftime;
+		//g_timer.GetFormattedCurrentTime(ftime);
+		//SetDlgItemText( hProgressWnd,IDC_STATICTIMER,ftime.c_str());
 		}
 	}
 	return 1;
@@ -39,8 +39,11 @@ DWORD WINAPI GenStat(void *Data)
 
 		ThreadData*m_data=(ThreadData*)Data;
 		int currentAlgo= SendDlgItemMessage(m_data-> hParentWindow, IDC_LIST1, LB_GETCURSEL, 0, 0);
-		SetDlgItemText( hProgressWnd,IDC_DOGroup,"GENERATING CRC FILE..");
-		AlgoManager->Algos[currentAlgo]->GenerateCRCFile(m_data->FolderPath,m_data->FolderPathOut);
+		if(!AlgoManager->Algos[currentAlgo]->m_isLossy)
+		{
+			SetDlgItemText( hProgressWnd,IDC_DOGroup,"GENERATING CRC FILE..");
+			AlgoManager->Algos[currentAlgo]->GenerateCRCFile(m_data->FolderPath,m_data->FolderPathOut);
+		}
 		g_timer.Stop();
 		SetDlgItemText( hProgressWnd,IDC_DOGroup,"COMPRESSING..");
 		std::fstream fout("statistici.htm",std::ios::out);
@@ -124,19 +127,23 @@ DWORD WINAPI Decompress(void *Data)
 		cAlgorithm * crtAlg = AlgoManager->Algos[currentAlgo];
 		crtAlg->DeCompress(m_data->FolderPath,m_data->FolderPathOut);
 		g_timer.Stop();
-		g_timer.Start();
-		SetDlgItemText( hProgressWnd,IDC_DOGroup,"CHECKING CRC FILE..");
-		char *crcfilename=(char*)m_data->FolderPath.c_str();
-		unsigned int len=strlen(crcfilename);
-		crcfilename[len-4]='\0';
-		std::string crcf=crcfilename;
-		int test=AlgoManager->Algos[currentAlgo]->CheckCRCFile(m_data->FolderPathOut,crcf);
-		g_timer.Stop();
-		g_bRunning=FALSE;
-		if(test)
-			MessageBox(hProgressWnd,"ok","Totul e aparent OK!",0);
-		else
-			MessageBox(hProgressWnd,"eroare","CRC ERROR!!",0);
+		if(!AlgoManager->Algos[currentAlgo]->m_isLossy)
+		{  
+			g_timer.Start();
+		
+			SetDlgItemText( hProgressWnd,IDC_DOGroup,"CHECKING CRC FILE..");
+			char *crcfilename=(char*)m_data->FolderPath.c_str();
+			unsigned int len=strlen(crcfilename);
+			crcfilename[len-4]='\0';
+			std::string crcf=crcfilename;
+			int test=AlgoManager->Algos[currentAlgo]->CheckCRCFile(m_data->FolderPathOut,crcf);
+			g_timer.Stop();
+			g_bRunning=FALSE;
+			if(test)
+				MessageBox(hProgressWnd,"ok","Totul e aparent OK!",0);
+			else
+				MessageBox(hProgressWnd,"eroare","CRC ERROR!!",0);
+		}
 		SetDlgItemText( hProgressWnd,IDC_DOGroup,"Ready..");
 		delete Data;
 		emptyData=NULL;
@@ -202,11 +209,6 @@ DWORD WINAPI ProgressDialog(void *Data)
 				 0,                      // use default creation flags 
 				&ThreadIDTimer);   // returns the thread identifier 
 	
-		/*std::string endcomp="Compreesion took: ";
-		std::string timeform;
-		g_timer.GetFormattedTime(timeform);
-		endcomp+=timeform;
-		SetDlgItemText(hwnd,IDC_STATUSTXT,endcomp.c_str());*/
 	}
 	else
 	{
@@ -226,12 +228,6 @@ DWORD WINAPI ProgressDialog(void *Data)
 				 0,                      // use default creation flags 
 				&ThreadIDTimer);   // returns the thread identifier 
 
-		/*std::string endcomp="Decompreesion took: ";
-		std::string timeform;
-		g_timer.GetFormattedTime(timeform);
-		endcomp+=timeform;
-		SetDlgItemText(hwnd,IDC_STATUSTXT,endcomp.c_str());*/
-		//DestroyWindow (hProgressWnd);
 	}
 	return 1;
 }
