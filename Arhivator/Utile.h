@@ -32,7 +32,9 @@ public:
 	~cLogger();
 };
 unsigned int g_GetFileSize(std::string filename);
+int BitLength(unsigned long val);
 
 #define FILE_BUFFER_SIZE 1024
+#define NUM_THREADS 4
 
 #endif

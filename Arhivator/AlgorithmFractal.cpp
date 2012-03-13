@@ -8,101 +8,48 @@
 
 using namespace cimg_library ;
 
+
 cAlgorithmFractal m_globalTemplate;
 /*
 Factorul de scalare pentru decompresie (marimea decomprimata impartita la marimea originala)
 Suportam doar int pentru a simplifica implementarea
 */
 int image_scale = 1;
-cAlgorithmFractal::cAlgorithmFractal():cAlgorithm(),dom_density(0)
+cAlgorithmFractal::sNonShareData::sNonShareData()
 {
-	m_Name="Algorithm Fractal";
-	m_Ext=".frac";
-}
-void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameOutput)
-{
-	
-	filenameOutput+=m_Ext;
-	GetFileSize(filenameInput);
-	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
-	CImg<unsigned char> img(filenameInput.c_str());
-	m_inputImage = &img ;
-	cBitStreamSoup output(filenameOutput,"out");
+	range = NULL;
+	domain = NULL;
+	cum_range = NULL;
+	cum_range2 = NULL;
+	cum_domain2 = NULL;
+	dom_density = 0;
+	max_error2 = 0;
 
-	CompressFile(input,output);
-	input.close();
-	m_CompressionProgress=0;
-	
-}
-void cAlgorithmFractal::DeCompress(std::string filenameInput,std::string filenameOutput)
-{
-
-	cBitStreamSoup input(filenameInput,"in");
-	ExpandFile(input,filenameOutput);
-	m_CompressionProgress=0;
-}
-void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
-{
-	frac_file = &output;
-
-	int x_size = m_inputImage->_width; /* marimea orizontala a  imaginii */
-	int y_size = m_inputImage->_height; /* marimea verticala a imaginii */
-
-	if (dom_density < 0 || dom_density > 2) 
+	for(unsigned int i = 0 ;i< MAX_BITS+1 ; i++)
 	{
-		assert(0);//("Domeniu de densitate incorect.\n");
+		dom_info[i].pos_bits = 0;
+		dom_info[i].x_domains = 0;
 	}
-	if (x_size % 4 != 0 || y_size % 4 != 0) 
-	{
-		assert(0);// ("Marimea imaginilor trebuie sa fie multiplu de 4\n");
-	}
-	// facem asta pe toate canalele r g b
-	
+	int s; /* marimea indexului pentru domenii */
+	int classa; /* numarul de clase */
+	domain_data *dom, *next; /* pointeri la domenii*/
 
-	frac_file->OutputBits((unsigned long)'F', 8);
-	frac_file->OutputBits((unsigned long)x_size, 16);
-	frac_file->OutputBits((unsigned long )y_size,16);
-	
-
-	//#pragma omp parallel for 
-	for (	int i =0 ; i<3 ; i++)
-	{
-		
-		double quality = 2.0; /* factor de calitate */
-		int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
-	
-		/* Aloca si initializeaza datele imaginii si a imaginii cumulative */
-		CompressInit(x_size, y_size, input,i);
-		/* Initializeaza marimea domeniului ca in decomprimare*/
-		DominfoInit(x_size, y_size, dom_density);
-		/* Clasifica domeniile: */
-		for (s = MIN_BITS; s <= MAX_BITS; s++)
-		{
-			ClassifyDomains(x_size, y_size, s);
-		}
-		/*Scriem headerul fisierului comprimat. */
-
-		frac_file->OutputBits((unsigned long)dom_density,2);
-		/* Comprimam imaginea recursiv */
-		max_error2 = quality*quality;
-		TraverseImage(0, 0, x_size, y_size,COMPRESS_RANGE);
-		/* Eliberam memoria: */
-		CompressCleanup(y_size);
-	}
+	map_head = NULL; /*primul element din lista inlantuita*/
+	for (s = MIN_BITS; s <= MAX_BITS; s++)
+		for (classa = 0; classa < NCLASSES; classa++)
+				domain_head[classa][s] = NULL;
+			
 }
-/* ================================================================
-Elibereaza toate structurile alocate dinamic pentru compresie.
-*/
-void cAlgorithmFractal::CompressCleanup(int y_size)
+void cAlgorithmFractal::sNonShareData::Cleanup(unsigned int y_size)
 {
 	int s; /* marimea indexului pentru domenii */
 	int classa; /* numarul de clase */
 	domain_data *dom, *next; /* pointeri la domenii*/
-	FreeArray((void**)range, y_size);
-	FreeArray((void**)domain, y_size/2);
-	FreeArray((void**)cum_range, y_size/2 + 1);
-	FreeArray((void**)cum_range2, y_size/2 + 1);
-	FreeArray((void**)cum_domain2, y_size/2 + 1);
+	cAlgorithmFractal::FreeArray((void**)range, y_size);
+	cAlgorithmFractal::FreeArray((void**)domain, y_size/2);
+	cAlgorithmFractal::FreeArray((void**)cum_range, y_size/2 + 1);
+	cAlgorithmFractal::FreeArray((void**)cum_range2, y_size/2 + 1);
+	cAlgorithmFractal::FreeArray((void**)cum_domain2, y_size/2 + 1);
 	for (s = MIN_BITS; s <= MAX_BITS; s++)
 		for (classa = 0; classa < NCLASSES; classa++)
 			for (dom = domain_head[classa][s]; dom != NULL; dom = next)
@@ -128,65 +75,184 @@ void cAlgorithmFractal::CompressCleanup(int y_size)
 		dom_info[i].x_domains = 0;
 	}
 
-	map_head = NULL;
+			map_head = NULL;
+}
+cAlgorithmFractal::cAlgorithmFractal():cAlgorithm()
+{
+	m_Name="Algorithm Fractal";
+	m_Ext=".frac";
+}
+void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameOutput)
+{
+
+	filenameOutput+=m_Ext;
+	GetFileSize(filenameInput);
+	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
+	CImg<unsigned char> img(filenameInput.c_str());
+	m_inputImage = &img ;
+	cBitStreamSoup output(filenameOutput,"out");
+
+	CompressFile(input,output);
+	input.close();
+	m_CompressionProgress=0;
 
 }
-void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_file,int channel)
+void cAlgorithmFractal::DeCompress(std::string filenameInput,std::string filenameOutput)
+{
+
+	cBitStreamSoup input(filenameInput,"in");
+	ExpandFile(input,filenameOutput);
+	m_CompressionProgress=0;
+}
+void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
+{
+	cBitStreamSoup *frac_file;
+	sNonShareData   *ns_data;
+
+	frac_file = &output;
+
+	int x_size = m_inputImage->_width; /* marimea orizontala a  imaginii */
+	int y_size = m_inputImage->_height; /* marimea verticala a imaginii */
+
+
+	if (x_size % 4 != 0 || y_size % 4 != 0) 
+	{
+		assert(0);// ("Marimea imaginilor trebuie sa fie multiplu de 4\n");
+	}
+	// facem asta pe toate canalele r g b
+
+
+	frac_file->OutputBits((unsigned long)'F', 8);
+	frac_file->OutputBits((unsigned long)x_size, 16);
+	frac_file->OutputBits((unsigned long )y_size,16);
+	
+	
+	cBitStreamSoup r_stream("", "out-buffer");
+	cBitStreamSoup g_stream("", "out-buffer");
+	cBitStreamSoup b_stream("", "out-buffer");
+
+	rgb_files[0] = &r_stream;
+	rgb_files[1] = &g_stream;
+	rgb_files[2] = &b_stream;
+
+	rgb_data[0]	= new sNonShareData;
+	rgb_data[1]	= new sNonShareData;
+	rgb_data[2] = new sNonShareData;
+
+#pragma omp parallel for private(frac_file), private(ns_data)
+	for (	int i =0 ; i<3 ; i++)
+	{
+		frac_file = rgb_files[i];
+		ns_data	  = rgb_data[i];
+		
+
+		double quality = 2.0; /* factor de calitate */
+		int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
+
+		/* Aloca si initializeaza datele imaginii si a imaginii cumulative */
+		CompressInit(x_size, y_size, input,i,ns_data);
+		
+		if (ns_data->dom_density < 0 || ns_data->dom_density > 2) 
+		{
+			assert(0);//("Domeniu de densitate incorect.\n");
+		}
+		/* Initializeaza marimea domeniului ca in decomprimare*/
+		DominfoInit(x_size, y_size, ns_data->dom_density,ns_data);
+		/* Clasifica domeniile: */
+		for (s = MIN_BITS; s <= MAX_BITS; s++)
+		{
+			ClassifyDomains(x_size, y_size, s,ns_data);
+		}
+		/*Scriem headerul fisierului comprimat. */
+
+		frac_file->OutputBits((unsigned long)ns_data->dom_density,2);
+		/* Comprimam imaginea recursiv */
+		ns_data->max_error2 = quality*quality;
+		TraverseImage(0, 0, x_size, y_size,COMPRESS_RANGE,ns_data,frac_file);
+		/* Eliberam memoria: */
+		//CompressCleanup(y_size);
+		ns_data->Cleanup(y_size);
+	}
+
+	delete rgb_data[0];
+	delete rgb_data[1];
+	delete rgb_data[2];
+
+	rgb_data[0] = NULL;
+	rgb_data[1] = NULL;
+	rgb_data[2] = NULL;
+
+	frac_file = &output;
+ 	for(int i = 0 ; i< 3; i++)
+	{
+		rgb_files[i]->AppendToFile(frac_file);
+	}
+
+}
+/* ================================================================
+Elibereaza toate structurile alocate dinamic pentru compresie.
+*/
+void cAlgorithmFractal::CompressCleanup(int y_size)
+{
+
+
+}
+void cAlgorithmFractal::CompressInit(int x_size,int y_size, std::fstream &image_file,int channel,sNonShareData   *ns_data)
 {
 	int x, y; /* indicii pe orizontala si pe verticala*/
 	unsigned long r_sum; /*data pentru partitia cumulativa si domeniu*/
 	double r_sum2; /* data pentru data partitiei cumulative sub radical*/
 	double d_sum2; /* data pentru domeniu sub radical */
-	range = (unsigned char**)allocate(y_size, x_size,
+	ns_data->range = (unsigned char**)allocate(y_size, x_size,
 		sizeof(unsigned char));
-	domain = (unsigned**)allocate(y_size/2, x_size/2,
+	ns_data->domain = (unsigned**)allocate(y_size/2, x_size/2,
 		sizeof(unsigned));
-	cum_range = (unsigned long**)allocate(y_size/2+1, x_size/2+1,
+	ns_data->cum_range = (unsigned long**)allocate(y_size/2+1, x_size/2+1,
 		sizeof(unsigned long));
-	cum_range2 = (float**)allocate(y_size/2+1, x_size/2+1,
+	ns_data->cum_range2 = (float**)allocate(y_size/2+1, x_size/2+1,
 		sizeof(float));
-	cum_domain2 = (float**)allocate(y_size/2+1, x_size/2+1,
+	ns_data->cum_domain2 = (float**)allocate(y_size/2+1, x_size/2+1,
 		sizeof(float));
 	/* Citim imaginile de input: */
 	CImg<unsigned char> _chanel=m_inputImage->get_channel(channel);
 	cimg_forY(_chanel,y)
 		cimg_forX(_chanel,x)
 	{
-		range[x][y] = _chanel(x,y);
+		ns_data->range[x][y] = _chanel(x,y);
 	}
-	
+
 	/*Calculam imaginea domeniului din cea a partitiei. Fiecare pixel in imaginea domeniu este suma
 	a 4 pixeli din imaginea partitiei. Nu facem media (adica nu impartim la 4) ca sa nu pierdem precizie	
 	*/
 	for (y=0; y < y_size/2; y++)
 		for (x=0; x < x_size/2; x++) 
 		{
-			domain[y][x] = (unsigned)range[y<<1][x<<1] + range[y<<1]
-			[(x<<1)+1] + range[(y<<1)+1][x<<1] + range[(y<<1)+1][(x<<1)+1];
+			ns_data->domain[y][x] = (unsigned)ns_data->range[y<<1][x<<1] + ns_data->range[y<<1]
+			[(x<<1)+1] + ns_data->range[(y<<1)+1][x<<1] + ns_data->range[(y<<1)+1][(x<<1)+1];
 		}
 		/* Calculam data cumulativa ceea ce va evita computari repetate pentru acelasi lucru mai tarziu
 		( cu functia region_sum() )*/
 		for (x=0; x <= x_size/2; x++) 
 		{
-			cum_range[0][x] = 0;
-			cum_range2[0][x] = cum_domain2[0][x] = 0.0;
+			ns_data->cum_range[0][x] = 0;
+			ns_data->cum_range2[0][x] = ns_data->cum_domain2[0][x] = 0.0;
 		}
 		for (y=0; y < y_size/2; y++) 
 		{
 			d_sum2 = r_sum2 = 0.0;
-			r_sum = cum_range[y+1][0] = 0;
-			cum_range2[y+1][0] = cum_domain2[y+1][0] = 0.0;
+			r_sum = ns_data->cum_range[y+1][0] = 0;
+			ns_data->cum_range2[y+1][0] = ns_data->cum_domain2[y+1][0] = 0.0;
 			for (x=0; x < x_size/2; x++) 
 			{
-				r_sum += domain[y][x];
-				cum_range[y+1][x+1] = cum_range[y][x+1] + r_sum;
-				d_sum2 += (double)square(domain[y][x]);
-				cum_domain2[y+1][x+1] = cum_domain2[y][x+1] + (float)d_sum2;
-				r_sum2 += (double) (square(range[y<<1][x<<1])
-					+ square(range[y<<1][(x<<1)+1])
-					+ square(range[(y<<1)+1][x<<1])
-					+ square(range[(y<<1)+1][(x<<1)+1]));
-				cum_range2[y+1][x+1] = cum_range2[y][x+1] + (float)r_sum2;
+				r_sum += ns_data->domain[y][x];
+				ns_data->cum_range[y+1][x+1] = ns_data->cum_range[y][x+1] + r_sum;
+				d_sum2 += (double)square(ns_data->domain[y][x]);
+				ns_data->cum_domain2[y+1][x+1] = ns_data->cum_domain2[y][x+1] + (float)d_sum2;
+				r_sum2 += (double) (square(ns_data->range[y<<1][x<<1])
+					+ square(ns_data->range[y<<1][(x<<1)+1])
+					+ square(ns_data->range[(y<<1)+1][x<<1])
+					+ square(ns_data->range[(y<<1)+1][(x<<1)+1]));
+				ns_data->cum_range2[y+1][x+1] = ns_data->cum_range2[y][x+1] + (float)r_sum2;
 			}
 		}
 }
@@ -197,24 +263,24 @@ Pentru un domeniu, valoarea returnata este scalata cu 4 sau 16 respectiv
 x,y si marimea trebuie sa fie toate pare.
 */
 #define region_sum(cum,x,y,size) \
-(cum[((y)+(size))>>1][((x)+(size))>>1] - cum[(y)>>1][((x)+(size))>>1] \
-- cum[((y)+(size))>>1][(x)>>1] + cum[(y)>>1][(x)>>1])
+	(cum[((y)+(size))>>1][((x)+(size))>>1] - cum[(y)>>1][((x)+(size))>>1] \
+	- cum[((y)+(size))>>1][(x)>>1] + cum[(y)>>1][(x)>>1])
 /* =================================================================
 *	Clasifica toate domeniile de o anumita marime. Acest lucru e facut o singura data
 sa salveze computatii mai tarziu. Fiecare domeniu este inserrat intr-o lista inlantuita
 corespunzator clasei ei si marimii .
 */
-void cAlgorithmFractal::ClassifyDomains(int x_size,int y_size,int s)
+void cAlgorithmFractal::ClassifyDomains(int x_size,int y_size,int s,sNonShareData   *ns_data)
 {
 	domain_data *dom = NULL; /* pointer catre domeniul nou*/
 	int x, y; /* pozitiile domeniului pe orizontala si pe verticala */
 	int classa; /* clasa domeniului */
 	int dom_size = 1<<(s+1); /* marimea domeniului */
-	int dom_dist = dom_size >> dom_density; /* distanta dintre domenii*/
+	int dom_dist = dom_size >> ns_data->dom_density; /* distanta dintre domenii*/
 	/* Initializeaza listele domeniului ca fiind goale: */
 	for (classa = 0; classa < NCLASSES; classa++)
 	{
-		domain_head[classa][s] = NULL;
+		ns_data->domain_head[classa][s] = NULL;
 	}
 	/* Clasifica toate domeniiile de aceasta marime */
 	for (y = 0; y <= y_size - dom_size; y += dom_dist)
@@ -223,27 +289,27 @@ void cAlgorithmFractal::ClassifyDomains(int x_size,int y_size,int s)
 			dom = (domain_data *)xalloc(sizeof(domain_data));
 			dom->x = x;
 			dom->y = y;
-			dom->d_sum =(float)( 0.25 *(double)region_sum(cum_range, x, y,dom_size));
-			dom->d_sum2 = (float)(0.0625*(double)region_sum(cum_domain2, x, y,dom_size));
-			classa = FindClass(x, y, dom_size);
-			dom->next = domain_head[classa][s];
-			domain_head[classa][s] = dom;
+			dom->d_sum =(float)( 0.25 *(double)region_sum(ns_data->cum_range, x, y,dom_size));
+			dom->d_sum2 = (float)(0.0625*(double)region_sum(ns_data->cum_domain2, x, y,dom_size));
+			classa = FindClass(x, y, dom_size,ns_data);
+			dom->next = ns_data->domain_head[classa][s];
+			ns_data->domain_head[classa][s] = dom;
 		}
 		/* Verifica ca fiecare clasa de domeniiu contine cel putin un domeniu . Daca clasa  este goala
 		ne comportam ca si cand contine ultimee domenii create (ceea ce reprezinta de fapt alta clasa).
 		*/
 		for (classa = 0; classa < NCLASSES; classa++)
 		{
-			if (domain_head[classa][s] == NULL) {
+			if (ns_data->domain_head[classa][s] == NULL) {
 				domain_data *dom2 = (domain_data *)xalloc(sizeof(domain_data));
 				*dom2 = *dom;
 				dom2->next = NULL;
-				domain_head[classa][s] = dom2;
+				ns_data->domain_head[classa][s] = dom2;
 			}
 		}
 }
 
-void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::string &outputSTR )
+void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::string &outputSTR)
 {
 
 	int x_size; /* marimea imaginii pe orizontala */
@@ -251,7 +317,13 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::string &outputST
 	int x_dsize; /* marimea imaginii decomprimata pe orizontala */
 	int y_dsize; /* marimea imaginii decomprimata pe verticala*/
 	/*Citim headerul fisierului fractal:*/
-	frac_file = &input;
+	cBitStreamSoup *frac_file = &input;
+	
+	rgb_data[0]	= new sNonShareData;
+	rgb_data[1]	= new sNonShareData;
+	rgb_data[2] = new sNonShareData;
+
+
 	if (frac_file->InputBits( 8) != 'F') 
 	{
 		assert(0);///"Format gresit\n";
@@ -261,49 +333,63 @@ void cAlgorithmFractal::ExpandFile( cBitStreamSoup &input, std::string &outputST
 
 	// facem asta pe toate canalele r g b
 	CImg<unsigned char> out(x_size,y_size,1,3);
-		
+
 	for (unsigned int c =0 ; c< 3 ; c++)
 	{	
-		
+		sNonShareData   *ns_data = rgb_data[c];
+
 		int iterations = 16; /* numarul de iteratii*/
 		//CImg<unsigned char> &chan = out.channel(i);
-		dom_density = (int)frac_file->InputBits( 2);
+		ns_data->dom_density = (int)frac_file->InputBits( 2);
 		/* Alocam imaginea scalata: */
 		x_dsize = x_size * image_scale;
 		y_dsize = y_size * image_scale;
-		range = (unsigned char**)allocate(y_dsize, x_dsize, sizeof(unsigned char));
+		ns_data->range = (unsigned char**)allocate(y_dsize, x_dsize, sizeof(unsigned char));
 
 		/*Initializam informatia domeniului ca in compresor*/
-		DominfoInit(x_size, y_size, dom_density);
+		DominfoInit(x_size, y_size, ns_data->dom_density,ns_data);
 		/*Citim toate maparile afine folosind aceeasi traversare recursiva a imaginii ca in compresor */
-		TraverseImage(0, 0, x_size, y_size, DECOMPRESS_RANGE);
+		TraverseImage(0, 0, x_size, y_size, DECOMPRESS_RANGE,ns_data,frac_file);
 		for(int i=0;i< x_dsize ;i++)
 			for(int j=0 ; j< y_size ; j++)
-				range[i][j] = 255;
+				ns_data->range[i][j] = 255;
 		/*Iteram toate maparile afine pe imaginea initiala (care e random) Astfel ca 
 		fiindca toate maparile afine sunt contractive, procesul converge*/
 		while (iterations-- > 0) 
-			RefineImage();
+			RefineImage(ns_data);
 		/* Smoothuim tranzitiile intre marginile partitiilor vecine:*/
-		AverageBoundaries();
-		
+		AverageBoundaries(ns_data);
+
 		cimg_forY(out,y)
 			cimg_forX(out,x)
 		{
-			out(x,y,0,c) =range[x][y];
+			out(x,y,0,c) =ns_data->range[x][y];
 		}
 		CompressCleanup(y_dsize);
-		//FreeArray((void**)range, y_dsize);
-		dom_density = 0;
+		//FreeArray((void**)ns_data->range, y_dsize);
+		ns_data->dom_density = 0;
 		
-		
+		//ns_data->Cleanup(y_size);
+		//delete(ns_data);
+		//ns_data = NULL;
 	}
 	std::string filename = outputSTR.append( ".bmp");
-	out.save((const char*)filename.c_str() );
-	/* Scriem fisierul decomprimat: */
 	
+	
+	delete rgb_data[0];
+	delete rgb_data[1];
+	delete rgb_data[2];
 
+	rgb_data[0] = NULL;
+	rgb_data[1] = NULL;
+	rgb_data[2] = NULL;
 	
+	out.save((const char*)filename.c_str() );
+	
+	/* Scriem fisierul decomprimat: */
+
+
+
 }
 cAlgorithmFractal::~cAlgorithmFractal()
 {
@@ -317,7 +403,7 @@ cadranele in ordinea descrescatoare a luminii; clasa 23 are cadranele
 in ordinea crescatoare a luminii.
 In plus: x , y si marimile sunt toate multiplii de 4
 */
-int cAlgorithmFractal::FindClass(int x, int y,int size)
+int cAlgorithmFractal::FindClass(int x, int y,int size, sNonShareData   *ns_data)
 {
 	int classa = 0; /* clasa rezultata*/
 	int i,j; /* indicii cadranelor */
@@ -326,10 +412,10 @@ int cAlgorithmFractal::FindClass(int x, int y,int size)
 	int size1 = size >> 1;
 	/*Ia valorile cumulative pentru fiecare cadran
 	*/
-	sum[0] = region_sum(cum_range, x, y, size1);
-	sum[1] = region_sum(cum_range, x, y+size1, size1);
-	sum[2] = region_sum(cum_range, x+size1, y+size1, size1);
-	sum[3] = region_sum(cum_range, x+size1, y, size1);
+	sum[0] = region_sum(ns_data->cum_range, x, y, size1);
+	sum[1] = region_sum(ns_data->cum_range, x, y+size1, size1);
+	sum[2] = region_sum(ns_data->cum_range, x+size1, y+size1, size1);
+	sum[3] = region_sum(ns_data->cum_range, x+size1, y, size1);
 	/* Calculeaza clasa din ordonarea acestor valori */
 	for (i = 0; i <= 2; i++)
 		for (j = i+1; j <= 3; j++) {
@@ -340,11 +426,11 @@ int cAlgorithmFractal::FindClass(int x, int y,int size)
 /* =================================================================
 Comprima o partitie cautand un matchcu toate domeniile din aceeasi clasa
 Imparte partitia daca eroarea cu domaniul cel mai apropiat este mai mare
-ca max_error2
+ca ns_data->max_error2
 
 * In plus: MIN_BITS <= s_log <= MAX_BITS
 */
-void cAlgorithmFractal::CompressRange(int x,int y, int s_log)
+void cAlgorithmFractal::CompressRange(int x,int y, int s_log, sNonShareData   *ns_data,cBitStreamSoup * frac_file)
 {
 	int r_size = 1<<s_log; /*marimea partitiei*/
 	int classa; /* clasa partitiei */
@@ -355,9 +441,9 @@ void cAlgorithmFractal::CompressRange(int x,int y, int s_log)
 	affine_map best_map; /* cea mai buna mapare pentru partitie */
 	unsigned long dom_number; /* numarul domeniului */
 	/* Calculeaza clasa rangeului si sumele cumulative: */
-	classa = FindClass(x, y, r_size);
-	range.r_sum = (double)region_sum(cum_range, x, y, r_size);
-	range.r_sum2 = (double)region_sum(cum_range2, x, y, r_size);
+	classa = FindClass(x, y, r_size,ns_data);
+	range.r_sum = (double)region_sum(ns_data->cum_range, x, y, r_size);
+	range.r_sum2 = (double)region_sum(ns_data->cum_range2, x, y, r_size);
 	range.x = x;
 	range.y = y;
 	range.s_log = s_log;
@@ -368,37 +454,37 @@ void cAlgorithmFractal::CompressRange(int x,int y, int s_log)
 	for (classa = 0; classa < NCLASSES; classa++)
 #endif
 
-		for (dom = domain_head[classa][s_log]; dom != NULL; dom =dom->next) 
+		for (dom = ns_data->domain_head[classa][s_log]; dom != NULL; dom =dom->next) 
 		{
 			/*Gaseste maparea optima de la partitie la domeniu */
-			FindMap(&range, dom, &map);
+			FindMap(&range, dom, &map,ns_data);
 			if (best_dom == NULL || map.error2 < best_map.error2) 
 			{
 				best_map = map;
 				best_dom = dom;
 			}
 		}
-		/*Scrie cea mai buna mapare afina daca eroarea cu domeniul cel mai bun e mai mica de max_error2, sau 
+		/*Scrie cea mai buna mapare afina daca eroarea cu domeniul cel mai bun e mai mica de ns_data->max_error2, sau 
 		daca nu mai e posibil sa impartim partitia in partii mai mici fiindca e prea mica 
 		*/
-		if (s_log == MIN_BITS || best_map.error2 <= max_error2*((long)r_size*r_size)) 
+		if (s_log == MIN_BITS || best_map.error2 <= ns_data->max_error2*((long)r_size*r_size)) 
 		{
-				/*Daca partitia e prea mica sa mai fie impartitia decompresorul trebuie sa stie asta
-				altfel trebuie sa indicam ca partitia nu a mai fost impartita:
-				*/
-				if (s_log != MIN_BITS) 
-				{
-					frac_file->OutputBit( 1); /* urmeaza maparea afina*/
-				}
-				frac_file->OutputBits( (unsigned long)best_map.contrast,CONTRAST_BITS);
-				frac_file->OutputBits( (unsigned long)best_map.brightness,BRIGHTNESS_BITS);
-				/*Cand contrastul e null , decompresorul nu trebuie sa stie ce domeniu a fost selectat: */
-				if (best_map.contrast == 0) 
-					return;
-				dom_number = (unsigned long)best_dom->y * dom_info[s_log].x_domains+ (unsigned long)best_dom->x;
-				/* Distanta dintre doua domenii este marimea domeniului 1<<(s_log+1) shiftata la stanga de densitatea domeniului astfel incat este o putere a lui 2
-				Pozitiile domeniului x si y au (s_log + 1 - dom_density) numar de biti zero , pe care nu treubie sa ii transmitem*/
-				frac_file->OutputBits( dom_number >> (s_log + 1 - dom_density),dom_info[s_log].pos_bits);
+			/*Daca partitia e prea mica sa mai fie impartitia decompresorul trebuie sa stie asta
+			altfel trebuie sa indicam ca partitia nu a mai fost impartita:
+			*/
+			if (s_log != MIN_BITS) 
+			{
+				frac_file->OutputBit( 1); /* urmeaza maparea afina*/
+			}
+			frac_file->OutputBits( (unsigned long)best_map.contrast,CONTRAST_BITS);
+			frac_file->OutputBits( (unsigned long)best_map.brightness,BRIGHTNESS_BITS);
+			/*Cand contrastul e null , decompresorul nu trebuie sa stie ce domeniu a fost selectat: */
+			if (best_map.contrast == 0) 
+				return;
+			dom_number = (unsigned long)best_dom->y * ns_data->dom_info[s_log].x_domains+ (unsigned long)best_dom->x;
+			/* Distanta dintre doua domenii este marimea domeniului 1<<(s_log+1) shiftata la stanga de densitatea domeniului astfel incat este o putere a lui 2
+			Pozitiile domeniului x si y au (s_log + 1 - ns_data->dom_density) numar de biti zero , pe care nu treubie sa ii transmitem*/
+			frac_file->OutputBits( dom_number >> (s_log + 1 - ns_data->dom_density),ns_data->dom_info[s_log].pos_bits);
 		} 
 		else 
 		{
@@ -406,25 +492,25 @@ void cAlgorithmFractal::CompressRange(int x,int y, int s_log)
 			*/
 			frac_file->OutputBit( 0);
 			/* Impartim partitia in 4 patrate si le procesam recursiv: */
-			CompressRange(x, y, s_log-1);
-			CompressRange(x+r_size/2, y, s_log-1);
-			CompressRange(x, y+r_size/2, s_log-1);
-			CompressRange(x+r_size/2, y+r_size/2, s_log-1);
+			CompressRange(x, y, s_log-1,ns_data,frac_file);
+			CompressRange(x+r_size/2, y, s_log-1,ns_data,frac_file);
+			CompressRange(x, y+r_size/2, s_log-1,ns_data,frac_file);
+			CompressRange(x+r_size/2, y+r_size/2, s_log-1,ns_data,frac_file);
 		}
 }
 /* ==================================================================
 * Gaseste cea mai buna mapare afina de la o partitie la un domeniu.
 Aste e facuta minimizand suma sub radical a erorilor ca o functie de contrast si luminozitate
 data de
-* radical din(contrast*domain[di] + brightness - range[ri])
+* radical din(contrast*ns_data->domain[di] + brightness - ns_data->range[ri])
 si rezolvam ecuatiile rezultate pentru a gasi contrastul si luminozitatea
 */
-void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map * map)
+void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map * map,sNonShareData   *ns_data)
 {
 	int ry; /* pozitia verticala in partitie*/
 	int dy = dom->y >> 1; /* pozitia verticala in domeniu*/
-	unsigned long rd = 0; /* suma range*domain values (scalata cu  4) */
-	double rd_sum; /* suma valorilor range*domain  (normalizata) */
+	unsigned long rd = 0; /* suma ns_data->range*ns_data->domain values (scalata cu  4) */
+	double rd_sum; /* suma valorilor ns_data->range*ns_data->domain  (normalizata) */
 	double contrast; /* contrast optimal intre partitie si domeniu*/
 	double brightness; /*offset de luminozitate optima intre partitie si domeniu*/
 	double qbrightness;/*luminozitate dupa cuantizare*/
@@ -433,8 +519,8 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 	double pixels = (double)((long)r_size*r_size); /*numarul total de pixeli*/
 	for (ry = rangep->y; ry < rangep->y + r_size; ry++, dy++)
 	{
-		register unsigned char *r = &range[ry][rangep->x];
-		register unsigned *d = &domain[dy][dom->x >> 1];
+		register unsigned char *r = &ns_data->range[ry][rangep->x];
+		register unsigned *d = &ns_data->domain[dy][dom->x >> 1];
 		int i = r_size >> 2;
 		/* Urmatorul loop este partea cea mai consumnatoare de timp din tot
 		programul , si din acest motiv este unrolluit putin (sunt scrise instructiuni in plus
@@ -484,7 +570,7 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 
 /* Citeste maparea afina pentru partitie sau imparte partitia daca compresorul a facut asta in compress_range()
 */
-void cAlgorithmFractal::DecompressRange(int x,int y,int s_log)
+void cAlgorithmFractal::DecompressRange(int x,int y,int s_log,sNonShareData   *ns_data,cBitStreamSoup * frac_file)
 {
 	int r_size = 1<<s_log; /* marime partitie*/
 	map_info *map; /* pointer la informatia de mapare afina*/
@@ -496,8 +582,8 @@ void cAlgorithmFractal::DecompressRange(int x,int y,int s_log)
 	if (s_log == MIN_BITS || frac_file->InputBit()) 
 	{
 		map = (map_info *)xalloc(sizeof(map_info));
-		map->next = map_head;
-		map_head = map;
+		map->next = ns_data->map_head;
+		ns_data->map_head = map;
 		map->x = x;
 		map->y = y;
 		map->size = r_size;
@@ -517,9 +603,9 @@ void cAlgorithmFractal::DecompressRange(int x,int y,int s_log)
 			* 0.0 <= contrast <= 1.0 so 0 <= contrast*16384 <= 16384 */
 			map->contrast = (int)(contrast*16384.0);
 			/* Citim numarul domeniului si adaugam bitii de zero netransmissi de compresor:*/
-			dom_number = frac_file->InputBits( dom_info[s_log].pos_bits);
-			map->dom_x = (int)(dom_number % dom_info[s_log].x_domains)<< (s_log + 1 - dom_density);
-			map->dom_y = (int)(dom_number / dom_info[s_log].x_domains)<< (s_log + 1 - dom_density);
+			dom_number = frac_file->InputBits( ns_data->dom_info[s_log].pos_bits);
+			map->dom_x = (int)(dom_number % ns_data->dom_info[s_log].x_domains)<< (s_log + 1 - ns_data->dom_density);
+			map->dom_y = (int)(dom_number / ns_data->dom_info[s_log].x_domains)<< (s_log + 1 - ns_data->dom_density);
 		} 
 		else
 		{
@@ -542,10 +628,10 @@ void cAlgorithmFractal::DecompressRange(int x,int y,int s_log)
 	else 
 	{
 		/*Impartim partitia in 4 patrate si  le procesam recursiv ca la compresie:*/
-		DecompressRange(x, y, s_log-1);
-		DecompressRange(x+r_size/2, y, s_log-1);
-		DecompressRange(x, y+r_size/2, s_log-1);
-		DecompressRange(x+r_size/2, y+r_size/2, s_log-1);
+		DecompressRange(x, y, s_log-1,ns_data,frac_file);
+		DecompressRange(x+r_size/2, y, s_log-1,ns_data,frac_file);
+		DecompressRange(x, y+r_size/2, s_log-1,ns_data,frac_file);
+		DecompressRange(x+r_size/2, y+r_size/2, s_log-1,ns_data,frac_file);
 	}
 }
 /* ===================================================================
@@ -554,15 +640,15 @@ void cAlgorithmFractal::DecompressRange(int x,int y,int s_log)
 cea originala. Insa convergenta catre imaginea finala se intampla rapid si din acest motiv
 daca rescriem aceeasi imagine si cu maparile afine aplicate obtinem acelasi rezultat optim
 dpdv al memoriei*/
-void cAlgorithmFractal::RefineImage()
+void cAlgorithmFractal::RefineImage(sNonShareData  *ns_data)
 {
 	map_info *map; /*pointer la maparea afina curenta*/
 	long brightness; /*offsetul de luminozitate al maparii scalat cu 65536 */
 	long val; /* marime noua pentru pixel */
-	int y; /* pozitie verticala in range */
+	int y; /* pozitie verticala in ns_data->range */
 	int dom_y; /* pozitie verticala in domeniu */
 	int j;
-	for (map = map_head; map != NULL; map = map->next)
+	for (map = ns_data->map_head; map != NULL; map = map->next)
 	{
 		/* map->brightness e scalata cu 128, trebuie scalata din nou cu  512 pentru a obtine factorul de scalare 65536:*/
 		brightness = (long)map->brightness << 9;
@@ -571,9 +657,9 @@ void cAlgorithmFractal::RefineImage()
 		{
 			/* Urmatorul loop consuma cel mai mult timp astfel ca mutam niste calcule de adresa
 			in afara lui*/
-			unsigned char *r = &range[y][map->x];
-			unsigned char *d = &range[dom_y++][map->dom_x];
-			unsigned char *d1 = &range[dom_y++][map->dom_x];
+			unsigned char *r = &ns_data->range[y][map->x];
+			unsigned char *d = &ns_data->range[dom_y++][map->dom_x];
+			unsigned char *d1 = &ns_data->range[dom_y++][map->dom_x];
 			j = map->size;
 			do 
 			{
@@ -596,13 +682,13 @@ void cAlgorithmFractal::RefineImage()
 /* =================================================================
 * Mergem prin toate partitiile ca sa smoothuim tranzitiile dintre ele mai putin intre cele foarte mici
 */
-void cAlgorithmFractal::AverageBoundaries()
+void cAlgorithmFractal::AverageBoundaries(	sNonShareData  *ns_data)
 {
 	map_info *map; /* pointer la maparea curenta afina*/
 	unsigned val; /* suma valorilor de pixeli pentru partitiile curente si cele vecine*/
 	int x; /*pozitia orizontala in partitia curenta*/
 	int y; /*pozitia verticala in partitia curenta*/
-	for (map = map_head; map != NULL; map = map->next) 
+	for (map = ns_data->map_head; map != NULL; map = map->next) 
 	{
 		if (map->size == (1<<MIN_BITS))
 			continue; /* partitie prea mica*/
@@ -611,9 +697,9 @@ void cAlgorithmFractal::AverageBoundaries()
 			/* Smooth marginea din stanga a partitie si cea din dreapta a partitiei vecine */
 			for (y = map->y; y < map->y + map->size; y++) 
 			{
-				val = range[y][map->x - 1] + range[y][map->x];
-				range[y][map->x - 1] =(unsigned char)((range[y][map->x - 2] + val)/3);
-				range[y][map->x] =(unsigned char)((val + range[y][map->x + 1])/3);
+				val = ns_data->range[y][map->x - 1] + ns_data->range[y][map->x];
+				ns_data->range[y][map->x - 1] =(unsigned char)((ns_data->range[y][map->x - 2] + val)/3);
+				ns_data->range[y][map->x] =(unsigned char)((val + ns_data->range[y][map->x + 1])/3);
 			}
 		}
 		if (map->y > 1) 
@@ -622,9 +708,9 @@ void cAlgorithmFractal::AverageBoundaries()
 			*/
 			for (x = map->x; x < map->x + map->size; x++)
 			{
-				val = range[map->y - 1][x] + range[map->y][x];
-				range[map->y - 1][x] =(unsigned char)((range[map->y - 2][x] + val)/3);
-				range[map->y][x] =(unsigned char)((val + range[map->y + 1][x])/3);
+				val = ns_data->range[map->y - 1][x] + ns_data->range[map->y][x];
+				ns_data->range[map->y - 1][x] =(unsigned char)((ns_data->range[map->y - 2][x] + val)/3);
+				ns_data->range[map->y][x] =(unsigned char)((val + ns_data->range[map->y + 1][x])/3);
 			}
 		}
 	}
@@ -636,7 +722,7 @@ Pentru a simplifica algoritmul, marimea patratului este aleasa ca o putere a lui
 Daca patratul este suficient de mic ca partitie , cheama metoda de compresie sau de decompresie
 * stim ca: x, y, x_size si y_size sunt multiplii 4.
 */
-void cAlgorithmFractal::TraverseImage(int x, int y,int  x_size,int  y_size,int process)
+void cAlgorithmFractal::TraverseImage(int x, int y,int  x_size,int  y_size,int process,	sNonShareData  *ns_data,cBitStreamSoup *frac_file)
 {
 	int s_size; /* marimea patratului s_size = 1<<s_log */
 	int s_log; /* log base 2 a marimii*/
@@ -646,29 +732,29 @@ void cAlgorithmFractal::TraverseImage(int x, int y,int  x_size,int  y_size,int p
 	/* Imparte patratul recursiv daca este prea mare pentru partitie:*/
 	if (s_log > MAX_BITS) 
 	{
-		TraverseImage(x, y, s_size/2, s_size/2,process);
-		TraverseImage(x+s_size/2, y, s_size/2, s_size/2,process);
-		TraverseImage(x, y+s_size/2, s_size/2, s_size/2,process);
-		TraverseImage(x+s_size/2, y+s_size/2, s_size/2, s_size/2,process);
+		TraverseImage(x, y, s_size/2, s_size/2,process,ns_data,frac_file);
+		TraverseImage(x+s_size/2, y, s_size/2, s_size/2,process,ns_data,frac_file);
+		TraverseImage(x, y+s_size/2, s_size/2, s_size/2,process,ns_data,frac_file);
+		TraverseImage(x+s_size/2, y+s_size/2, s_size/2, s_size/2,process,ns_data,frac_file);
 	} 
 	else 
 	{
 		/* Comprima sau decomprima patratul ca in partitie: */
 		switch (process)
 		{
-			case COMPRESS_RANGE:
-				CompressRange(x, y, s_log);
-				break;
-			case DECOMPRESS_RANGE:
-				DecompressRange(x, y, s_log);
-				break;
+		case COMPRESS_RANGE:
+			CompressRange(x, y, s_log,ns_data,frac_file);
+			break;
+		case DECOMPRESS_RANGE:
+			DecompressRange(x, y, s_log,ns_data,frac_file);
+			break;
 		}
-				
+
 	}
 	/* Traverseaza dreptunghiul din dreapta patratului: */
 	if (x_size > s_size) 
 	{
-		TraverseImage(x + s_size, y, x_size - s_size, y_size,process);
+		TraverseImage(x + s_size, y, x_size - s_size, y_size,process,ns_data,frac_file);
 		/* Cum x_size si s_size sunt multiplii de 4, x + s_size si
 		* x_size - s_size sunt de asemena multiplii de 4.
 		*/
@@ -676,14 +762,14 @@ void cAlgorithmFractal::TraverseImage(int x, int y,int  x_size,int  y_size,int p
 	/* Traverseaza dreptunghiul din josul patratului:*/
 	if (y_size > s_size) 
 	{
-		TraverseImage(x, y + s_size, s_size, y_size - s_size,process);
+		TraverseImage(x, y + s_size, s_size, y_size - s_size,process,ns_data,frac_file);
 	}
 }
 /* =================================================================
 *Initializaeaza informatia din domeniu. Asta trebuie facuta in aceeasi manierea
 ca in compresor si decompresor.
 */
-void cAlgorithmFractal::DominfoInit(int x_size,int y_size,int density)
+void cAlgorithmFractal::DominfoInit(int x_size,int y_size,int density,sNonShareData  *ns_data)
 {
 	int s; /* marimea domeniilor 1<<(s+1) */
 	for (s = MIN_BITS; s <= MAX_BITS; s++)
@@ -692,10 +778,10 @@ void cAlgorithmFractal::DominfoInit(int x_size,int y_size,int density)
 		int dom_size = 1<<(s+1); /* marimea domeniului */
 		/* distanta intre doua domenii este marimea domeniului  1<<(s+1)
 		* shiftata la dreapta cu densitatea domeniului.*/
-		dom_info[s].x_domains = ((x_size - dom_size)>>(s + 1 - density)) + 1;
+		ns_data->dom_info[s].x_domains = ((x_size - dom_size)>>(s + 1 - density)) + 1;
 		y_domains = ((y_size - dom_size)>>(s + 1 -density)) + 1;
 		/* Numarul de biti necesar pentru a encoda pozitiile domeniului: */
-		dom_info[s].pos_bits = BitLength((unsigned long)dom_info[s].x_domains * y_domains - 1);
+		ns_data->dom_info[s].pos_bits = BitLength((unsigned long)ns_data->dom_info[s].x_domains * y_domains - 1);
 	}
 }
 /* ==============================================================
@@ -717,7 +803,7 @@ void *cAlgorithmFractal::xalloc(unsigned size)
 	void *p = malloc(size);
 	if (p == NULL)
 	{
-		assert(0);//("insufficient memory\n");
+		assert(0&&"insuficient memory");//("insufficient memory\n");
 	}
 	return p;
 }
@@ -747,39 +833,4 @@ void cAlgorithmFractal::FreeArray(void **array,int rows)
 		}
 		array = NULL;
 	}
-}
-/* =============================================================
-* Da numarul de biti necesar reprezentarii unui intreg:
-* 0 to 1 -> 1,
-* 2 to 3 -> 2,
-* 3 to 7 -> 3, etc...
-* Se poate mai rapid cu tabel de lookup.
-*/
-int cAlgorithmFractal::BitLength(unsigned long val)
-{
-int bits = 1;
-if (val > 0xffff)
-{
-	bits += 16;
-	val >>= 16;
-}	
-
-if (val > 0xff)
-{
-	bits += 8;
-	val >>= 8;
-}
-if (val > 0xf)
-{
-	bits += 4;
-	val >>= 4;
-}
-if (val > 0x3)
-{
-	bits += 2;
-	val >>= 2;
-}
-if (val > 0x1) 
-	bits += 1;
-return bits;
 }

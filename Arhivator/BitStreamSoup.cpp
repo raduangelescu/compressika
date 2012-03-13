@@ -8,6 +8,7 @@ cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod,int bufferS
 	m_Rack = 0; 
 	m_Mask = 0x80;
 	m_PacifierCounter=0;
+	m_crtBuffEl = 0;
 
 	if(mod.compare("in")==0)
 	{
@@ -40,7 +41,6 @@ cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod,int bufferS
 			LOG(log);// logam ceva sa fim siguri ca s-a deschis fisieru
 		
 			m_Buffer = NULL;
-			m_crtBuffEl = 0;
 			if(m_BufferSize > 0 )
 			{
 				m_Buffer = new unsigned char[m_BufferSize];
@@ -58,9 +58,6 @@ cBitStreamSoup::cBitStreamSoup(std::string filename, std::string mod,int bufferS
 	}
 	else
 	{
-		m_Rack = 0; 
-		m_Mask = 0x80;
-		m_Buffer = NULL;
 		
 		if(m_BufferSize > 0 )
 		{
@@ -278,30 +275,50 @@ void cBitStreamSoup::OutputBits(unsigned long code, int count)
          mask >>= 1; 
      } 
 }
+
+void OutputBytes(unsigned char *bytes,int count)
+{
+
+}
  //appendez bufferul curent la un fisier
- void cBitStreamSoup::AppendToFile(std::fstream &file)
+ void cBitStreamSoup::AppendToFile(cBitStreamSoup *fileBS)
  {
-	 m_File.write((char*)m_Buffer,m_crtBuffEl);
-	 
-	 if ( m_Mask != 0x80 ) 
-		m_File.put(m_Rack);
+	 for(int i = 0 ;i< m_crtBuffEl ; i++)
+	 {
+		fileBS->OutputBits(m_Buffer[i],8);
+	 }
+
+	 if (m_Mask != 0x80) 
+	 {
+		 int writeBits = BitLength(m_Mask); 
+		fileBS->OutputBits(m_Rack,writeBits);
+	 }
+
+ }
+ // force write buffer
+ void cBitStreamSoup::ForceWrite()
+ {
+	 if(m_Mod==OUTPUT_FILE)
+	 {
+		 if (m_Buffer)
+		 {
+			 if(m_crtBuffEl < m_BufferSize)
+			 {
+				 m_File.write((char*)m_Buffer,m_crtBuffEl);
+			 }
+		 }
+		 if ( m_Mask != 0x80 ) 
+			 m_File.put(m_Rack); 
+	 }
+
  }
 // ne-am jucat si acum strangem dupa noi 
 cBitStreamSoup::~cBitStreamSoup()
 {
-	if(m_Mod==OUTPUT_FILE)
-	{
-		if (m_Buffer)
-		{
-			if(m_crtBuffEl < m_BufferSize)
-			{
-				m_File.write((char*)m_Buffer,m_crtBuffEl);
-			}
-		}
-		if ( m_Mask != 0x80 ) 
-			m_File.put(m_Rack); 
-	}
-	m_File.close();  
+	ForceWrite();
+	
+	if(m_File.is_open())
+		m_File.close();  
 	
 	if(m_Buffer)
 		delete [] m_Buffer;
