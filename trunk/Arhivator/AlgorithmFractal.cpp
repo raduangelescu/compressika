@@ -32,7 +32,6 @@ cAlgorithmFractal::sNonShareData::sNonShareData()
 	}
 	int s; /* marimea indexului pentru domenii */
 	int classa; /* numarul de clase */
-	domain_data *dom, *next; /* pointeri la domenii*/
 
 	map_head = NULL; /*primul element din lista inlantuita*/
 	for (s = MIN_BITS; s <= MAX_BITS; s++)
@@ -81,10 +80,11 @@ cAlgorithmFractal::cAlgorithmFractal():cAlgorithm()
 {
 	m_Name="Algorithm Fractal";
 	m_Ext=".frac";
+	m_isLossy = true;
+		 
 }
 void	cAlgorithmFractal::Compress(std::string filenameInput,std::string filenameOutput)
 {
-
 	filenameOutput+=m_Ext;
 	GetFileSize(filenameInput);
 	std::fstream input(filenameInput.c_str(),std::ios::in|std::ios::binary);
@@ -145,7 +145,6 @@ void cAlgorithmFractal::CompressFile(std::fstream &input,cBitStreamSoup &output)
 		frac_file = rgb_files[i];
 		ns_data	  = rgb_data[i];
 		
-
 		double quality = 2.0; /* factor de calitate */
 		int s; /* indexul de marime pentru domenii este 1<<(s+1)  adica 2^(s+1) */
 
