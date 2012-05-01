@@ -8,10 +8,10 @@ Compressika contains the fractal compression algorithm (with a parallel implemen
 
 = About =
 This project was started by Radu Angelescu. The main purpose of this project is to develop an efficient fractal based image compression algorithm.
-Users:
-[Tutorial on How to use Compressika]
-[Known problems]
-Developers:
-[Get and build Compressika]
-[Tutorial about Compressika code structure]
-[Writting code for Compressika]
+*Users:
+**[HowToCompressika|Tutorial on How to use Compressika]
+**[HowToCompressika|Known problems]
+*Developers:
+**[HowToCompressika|Get and build Compressika]
+**[HowToCompressika|Tutorial about Compressika code structure]
+**[HowToCompressika|Writting code for Compressika]
