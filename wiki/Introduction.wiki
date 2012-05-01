@@ -3,15 +3,22 @@
 
 = Introduction =
 
-Compressika is a workbench for developing a good lossy fractal based image compression. 
+*Compressika is a workbench for developing a good lossy fractal based image compression. 
 Compressika contains the fractal compression algorithm (with a parallel implementation) and some non-lossy algorithms for testing fractal coefficient compression.
 
 = About =
-This project was started by Radu Angelescu. The main purpose of this project is to develop an efficient fractal based image compression algorithm.
+*This project was started by Radu Angelescu. The main purpose of this project is to develop an efficient fractal based image compression algorithm.
+
 *Users:
+
 **[HowToCompressika|Tutorial on How to use Compressika]
+
 **[HowToCompressika|Known problems]
+
 *Developers:
+
 **[HowToCompressika|Get and build Compressika]
+
 **[HowToCompressika|Tutorial about Compressika code structure]
+
 **[HowToCompressika|Writting code for Compressika]
