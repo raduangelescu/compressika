@@ -19,6 +19,6 @@ Compressika contains the fractal compression algorithm (with a parallel implemen
 
 **[GetAndBuild Get and build Compressika]
 
-**[HowToCompressika|Tutorial about Compressika code structure]
+**[CodeStructure Tutorial about Compressika code structure]
 
 **[HowToCompressika|Writting code for Compressika]
