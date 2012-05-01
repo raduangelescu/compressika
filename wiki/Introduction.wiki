@@ -11,7 +11,7 @@ Compressika contains the fractal compression algorithm (with a parallel implemen
 
 *Users:
 
-** HowToCompressika
+**  HowToCompressika
 
 **[HowToCompressika|Known problems]
 
