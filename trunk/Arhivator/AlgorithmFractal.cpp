@@ -516,10 +516,13 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 	double max_scaled; /* maximum scaled value = contrast*MAX_GREY */
 	int r_size = 1 << rangep->s_log; /* marimea partitiei*/
 	double pixels = (double)((long)r_size*r_size); /*numarul total de pixeli*/
-	for (ry = rangep->y; ry < rangep->y + r_size; ry++, dy++)
+	ry = rangep->y;
+	int ryLimit = rangep->y + r_size; 
+
+	for (; ry < ryLimit; ry++, dy++)
 	{
-		register unsigned char *r = &ns_data->range[ry][rangep->x];
-		register unsigned *d = &ns_data->domain[dy][dom->x >> 1];
+		unsigned char *r = &ns_data->range[ry][rangep->x];
+		unsigned *d = &ns_data->domain[dy][dom->x >> 1];
 		int i = r_size >> 2;
 		/* Urmatorul loop este partea cea mai consumnatoare de timp din tot
 		programul , si din acest motiv este unrolluit putin (sunt scrise instructiuni in plus
@@ -783,17 +786,7 @@ void cAlgorithmFractal::DominfoInit(int x_size,int y_size,int density,sNonShareD
 		ns_data->dom_info[s].pos_bits = BitLength((unsigned long)ns_data->dom_info[s].x_domains * y_domains - 1);
 	}
 }
-/* ==============================================================
-Cuantizeaza o valoare din rangeul 0-> max in rangeul 0->imax si se asigura
-ca 0.0 este codata ca 0 si max ca imax
-*/
-int cAlgorithmFractal::Quantize(double value,double max,int imax)
-{
-	int ival = (int) floor((value/max)*(double)(imax+1));
-	if (ival < 0) return 0;
-	if (ival > imax) return imax;
-	return ival;
-}
+
 /* ==============================================================
 * Aloca memorie si verifica daca a alaocat memorie cum trebuie
 */

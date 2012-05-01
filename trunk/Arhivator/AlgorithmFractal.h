@@ -150,7 +150,19 @@ private:
 	/*Functii comune compresie-decompresie*/
 
 	void TraverseImage (int x, int y, int x_size, int y_size,int whatToDo,	sNonShareData  *ns_data,cBitStreamSoup *frac_file);
-	int Quantize (double value, double max, int imax);
+	
+	int inline fasterfloor( const float x ) { return x < 0 ? (int) x == x ? (int) x : (int) x -1 : (int) x; }
+	/* ==============================================================
+Cuantizeaza o valoare din rangeul 0-> max in rangeul 0->imax si se asigura
+ca 0.0 este codata ca 0 si max ca imax
+*/
+	inline int Quantize (float value, float max, int imax)
+	{	
+		int ival = fasterfloor((value/max)*(imax+1));
+		if (ival < 0) return 0;
+		if (ival > imax) return imax;
+		return ival;
+	}
 	void DominfoInit (int x_size, int y_size, int density,sNonShareData  *ns_data);
 	void *xalloc (unsigned size);
 	void **allocate (int rows, int columns, int elem_size);

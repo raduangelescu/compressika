@@ -1,0 +1,168 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\GUI">
+      <UniqueIdentifier>{f25cdc7b-8d47-4d46-a055-ec4873f8b087}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Structure">
+      <UniqueIdentifier>{6f978072-1f06-4ca0-8bd0-cf9100b94c46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Structure\Algoritmi">
+      <UniqueIdentifier>{7f5b42b2-323c-432f-95dd-38e621b5ed4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Structure\Crc">
+      <UniqueIdentifier>{c989164f-8e60-4bdb-aed5-46e2af17e27b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BinaryTree.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="WeakMemoryManager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Arhivator.cpp">
+      <Filter>src\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Progress.cpp">
+      <Filter>src\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm.cpp">
+      <Filter>src\Structure</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmsManager.cpp">
+      <Filter>src\Structure</Filter>
+    </ClCompile>
+    <ClCompile Include="BitStreamSoup.cpp">
+      <Filter>src\Structure</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmFractal.cpp">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmHuffman.cpp">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmHuffmanAdaptiv.cpp">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmLZSS.cpp">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClCompile>
+    <ClCompile Include="AlgorithmLZW.cpp">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BinaryTree.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Utile.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="WeakMemoryManager.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Arhivator.h">
+      <Filter>src\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Progress.h">
+      <Filter>src\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>src\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>src\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm.h">
+      <Filter>src\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmsManager.h">
+      <Filter>src\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="BitStreamSoup.h">
+      <Filter>src\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmFractal.h">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmHuffman.h">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmHuffmanAdaptiv.h">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmLZSS.h">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClInclude>
+    <ClInclude Include="AlgorithmLZW.h">
+      <Filter>src\Structure\Algoritmi</Filter>
+    </ClInclude>
+    <ClInclude Include="Crc.h">
+      <Filter>src\Structure\Crc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Arhivator.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="bitmap3.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icoana.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icon1.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="marhivator.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\bin\imagini\marhivator.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="monster-5.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\bin\imagini\monster-5.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Arhivator.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+</Project>
