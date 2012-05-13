@@ -1,0 +1,299 @@
+@charset "utf-8";
+/* CSS Document */
+
+/*
+butoane
+*/
+#pressedLogin
+{
+	background-image:  url(imagini/butpL.png);
+	background-repeat: no-repeat;
+	width:70px;
+	height:20px;
+	float:right;
+	margin-right:20px;
+	margin-top:30px;
+	padding-left:3px;
+	text-align:center;
+	}
+	#pressedHome
+	{
+		background-image:  url(imagini/butpH.png);
+	background-repeat: no-repeat;
+	width:70px;
+	height:20px;
+	float:right;
+	margin-right:20px;
+	margin-top:30px;
+	padding-left:3px;
+	text-align:center;
+		}
+#buttonLogin
+{
+	background-image:  url(imagini/butnL.png);
+	background-repeat: no-repeat;
+	width:70px;
+	height:20px;
+	float:right;
+	margin-right:20px;
+	margin-top:30px;
+	padding-left:3px;
+	text-align:center;
+	
+	}
+	#buttonLogin:hover
+	{
+		background-image:  url(imagini/butHL.png);
+	}
+		#buttonLogin:active
+		{
+		background-image:  url(imagini/butpL.png);
+		}
+		#buttonLogout
+{
+	background-image:  url(imagini/butnLO.png);
+	background-repeat: no-repeat;
+	width:70px;
+	height:20px;
+	float:right;
+	margin-right:20px;
+	margin-top:30px;
+	padding-left:3px;
+	text-align:center;
+	
+	}
+	#buttonLogout:hover
+	{
+		background-image:  url(imagini/butHLO.png);
+	}
+		#buttonLogout:active
+		{
+		background-image:  url(imagini/butpLO.png);
+		}
+		#buttonDate
+{
+	background-image:  url(imagini/butnD.png);
+	background-repeat: no-repeat;
+	width:70px;
+	height:20px;
+	float:right;
+	margin-right:20px;
+	margin-top:30px;
+	padding-left:3px;
+	text-align:center;
+	
+	}
+	#buttonDate:hover
+	{
+		background-image:  url(imagini/butHD.png);
+	}
+		#buttonDate:active
+		{
+		background-image:  url(imagini/butpD.png);
+		}
+		#buttonHome
+{
+	background-image:  url(imagini/butnH.png);
+	background-repeat: no-repeat;
+	width:70px;
+	height:20px;
+	float:right;
+	margin-right:20px;
+	margin-top:30px;
+	padding-left:3px;
+	text-align:center;
+	
+	}
+	#buttonHome:hover
+	{
+		background-image:  url(imagini/butHH.png);
+	}
+		#buttonHome:active
+		{
+		background-image:  url(imagini/butpH.png);
+		}
+/*
+end of butoane
+*/
+#wrap 
+{
+	width:760px;
+	margin:0 auto;
+	background-color: #CCC;
+	background-image:url(imagini/contentback.png);
+	z-index:2;
+}
+#NavLink
+{
+	float:right;
+	font-size:10px;
+	margin-right:25px;
+	width:100%;
+	text-align:right;
+
+}
+#header 
+{
+	height:50px;
+	background-image: url(imagini/header.png);
+	z-index:2;
+}
+#DecorBara
+{
+	position:absolute;
+	height:12px;
+	top:188px;
+	width:100%;
+	background-image: url(imagini/banda.png);
+	background-repeat:repeat-x;
+	z-index:0;
+}
+h2{
+	margin:0;
+	font-size:100%;
+	color:#FFF;
+}
+h1 {
+	margin:0;
+	font-size:300%;
+	letter-spacing:-0.1em;
+	color: #CCC;
+}
+#m_title
+{
+	position:relative;
+	background-color: #FFF;
+	background-image:url(imagini/backtitle.png);
+	z-index:2;
+	height:150px;
+}
+
+#m_Nume
+{
+	float: right;
+	margin-right:30px;
+	margin-top:50px;
+}
+#m_ImageRight
+{
+	border-bottom-style:dashed;
+	border-bottom-color:#FFC;
+	float: right;
+	margin:10px;
+
+}
+#m_ImageLeft
+{
+	border-bottom-style:dashed;
+	border-bottom-color:#FFC;
+	float: left;
+	margin:10px;
+
+}
+
+#m_FormsRight
+{
+	margin:0;
+	float: right;
+	margin-top:10px;
+	width:100%;
+}
+#m_FormsLeft
+{
+	float: left;
+}
+
+#ContentR 
+{
+	float:left;
+	width:425px;
+	background-color: #FFF;	
+	background-repeat:repeat-y;
+	font-size:90%;
+	text-align: justify;
+	margin:25px;
+	color: #A2A521;
+}
+#m_EmailCheck
+{
+	color:#F00;
+	text-align:right;
+}
+#m_ParolaCheck
+{
+	color:#F00;
+	text-align:right;
+}
+#m_MesajCheck
+{
+	color:#F00;
+	text-align:right;
+}
+#ContentR .padding {
+	padding:25px;
+}
+#ContentL 
+{
+	color: #565722;
+	float:right;
+	width:255px;
+	background-color: #FFF;	
+	background-repeat:repeat-y;
+	background-position: right;
+	font-size:90%;
+	text-align: justify;
+	margin-right:25px;
+	margin-top:25px;
+}
+#Footer 
+{
+	clear:both;
+	background-color: #FFF;
+	background-repeat:repeat-x;	
+	height:60px;
+	background-image:url(imagini/borderD.png);
+	background-position:bottom;
+	text-align: center;
+}
+body,
+html {
+	margin:0;
+	padding:0;
+	background-color: #FFF;
+	font-family:Arial, Helvetica, sans-serif;
+}
+#Cadere
+{
+	font-size:200%;
+	color:#B1CF79;
+	background-repeat:no-repeat;
+	background-image:url(imagini/caderea.png);
+	text-indent:-999999px;
+}
+#AlbertCamus
+{
+	font-size:200%;
+	color:#B1CF79;
+	background-repeat:no-repeat;
+	background-image:url(imagini/camus.png);
+	text-indent:-999999px;
+	margin-top:10px;
+	margin-bottom:10px;
+}
+#Plastic
+{
+	font-size:200%;
+	color:#B1CF79;
+	background-repeat:no-repeat;
+	background-image:url(imagini/plastic.png);
+	text-indent:-999999px;
+}
+#Copywright
+{
+	width:100%;
+	text-align:center;
+		font-style:italic;
+	font-size:10px;
+	color:#CCC;
+	margin-top:20px;
+}
