@@ -3,7 +3,7 @@
 
 = How to use : Compress/Uncompress mode =
 
-Compressika is pretty streight forward. You run the executable and you get all your options in a single dialog box.
+Compressika is pretty streight forward. You run the executable and you get all your options in a single dialog box:
 * 1. Open Compressika aplication
 * 2. Browse to your input file (file that you want compressed/decompressed)
 * 3. Browse to your output file (location where you want your file to be compressed/decompressed)
