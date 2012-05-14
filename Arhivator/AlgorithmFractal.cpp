@@ -457,6 +457,7 @@ void cAlgorithmFractal::CompressRange(int x,int y, int s_log, sNonShareData   *n
 		{
 			/*Gaseste maparea optima de la partitie la domeniu */
 			FindMap(&range, dom, &map,ns_data);
+			
 			if (best_dom == NULL || map.error2 < best_map.error2) 
 			{
 				best_map = map;
@@ -510,7 +511,7 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 	int dy = dom->y >> 1; /* pozitia verticala in domeniu*/
 	unsigned long rd = 0; /* suma ns_data->range*ns_data->domain values (scalata cu  4) */
 	double rd_sum; /* suma valorilor ns_data->range*ns_data->domain  (normalizata) */
-	double contrast; /* contrast optimal intre partitie si domeniu*/
+	float contrast; /* contrast optimal intre partitie si domeniu*/
 	double brightness; /*offset de luminozitate optima intre partitie si domeniu*/
 	double qbrightness;/*luminozitate dupa cuantizare*/
 	double max_scaled; /* maximum scaled value = contrast*MAX_GREY */
@@ -540,13 +541,13 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 	}
 	rd_sum = 0.25*rd;
 	/* Calculaeaza si cuantizeaza contrastul*/
-	contrast = pixels * dom->d_sum2 - dom->d_sum * dom->d_sum;
+	contrast = (float)pixels * dom->d_sum2 - dom->d_sum * dom->d_sum;
 	if (contrast != 0.0) {
-		contrast = (pixels*rd_sum - rangep->r_sum*dom->d_sum)/contrast;
+		contrast = (float)(pixels*rd_sum - rangep->r_sum*dom->d_sum)/contrast;
 	}
 	map->contrast = Quantize(contrast, MAX_CONTRAST, MAX_QCONTRAST);
 	/* Recalculeaza contrastul ca in decompresor:*/
-	contrast = dequantize(map->contrast, MAX_CONTRAST, MAX_QCONTRAST);
+	contrast = (float)dequantize(map->contrast, MAX_CONTRAST, MAX_QCONTRAST);
 	/* Calculeaza si cuantizeaza luminozitatea. Cuantizam de fapt valoarea
 	* (brightness + 255*contrast) pentru a avea o valoare pozitiva:
 	* -contrast*255 <= brightness <= 255
@@ -554,8 +555,8 @@ void cAlgorithmFractal::FindMap(range_data *rangep,domain_data * dom,affine_map 
 	*/
 	brightness = (rangep->r_sum - contrast*dom->d_sum)/pixels;
 	max_scaled = contrast*MAX_GREY;
-	map->brightness = Quantize(brightness + max_scaled,
-		max_scaled + MAX_GREY, MAX_QBRIGHTNESS);
+	map->brightness = Quantize((float)(brightness + max_scaled),
+		(float)(max_scaled + MAX_GREY), MAX_QBRIGHTNESS);
 	/*Recalculam valoarea cuantizata a luminozitatii ca in decompresor: */
 	qbrightness = dequantize(map->brightness, max_scaled + MAX_GREY,
 		MAX_QBRIGHTNESS) - max_scaled;

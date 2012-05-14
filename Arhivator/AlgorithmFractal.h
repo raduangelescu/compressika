@@ -153,9 +153,9 @@ private:
 	
 	int inline fasterfloor( const float x ) { return x < 0 ? (int) x == x ? (int) x : (int) x -1 : (int) x; }
 	/* ==============================================================
-Cuantizeaza o valoare din rangeul 0-> max in rangeul 0->imax si se asigura
-ca 0.0 este codata ca 0 si max ca imax
-*/
+	Cuantizeaza o valoare din rangeul 0-> max in rangeul 0->imax si se asigura
+	ca 0.0 este codata ca 0 si max ca imax
+	*/
 	inline int Quantize (float value, float max, int imax)
 	{	
 		int ival = fasterfloor((value/max)*(imax+1));
