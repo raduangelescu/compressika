@@ -11,7 +11,7 @@ BOOL bThreadActive=FALSE;
 
 
 // da.. stiu ca arata urat... am putea sa impartim pe aici in clase
-// doar ca kkt-ul de proiect Win32 ai nevoie de CALLBACKURI dinalea de c
+// doar ca  proiectul Win32 ai nevoie de CALLBACKURI  de c
 // si orice am face tot treubie sa avem functii globale
 // insa de variabilele globale am putea sa scapam.. ca sunt nasoale
 #define MAX_LOADSTRING 100
