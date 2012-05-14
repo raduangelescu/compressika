@@ -54,38 +54,41 @@ DWORD WINAPI GenStat(void *Data)
 		fout<<"<h3>Initial file size(bytes):</h3>"<<initialsize<<"\n";
 		for(unsigned int i=0;i<AlgoManager->Algos.size();i++)
 		{
-			std::string label="COMPRESSING WITH:";
-			label+=AlgoManager->Algos[i]->getName();
-			fout<<"<h3>"<<AlgoManager->Algos[i]->getName().c_str()<<"</h3>"<<"\n";
-			SetDlgItemText( hProgressWnd,IDC_DOGroup,label.c_str());
-			g_timer.Start();
-			AlgoManager->Algos[i]->Compress(m_data->FolderPath,m_data->FolderPathOut);
-			g_timer.Stop();
-			std::string timeform="";
-			g_timer.GetFormattedCurrentTime(timeform);
-			fout<<"<b>Timp compresie</b>:"<<timeform.c_str()<<"<br>\n";
-			SendDlgItemMessage( hProgressWnd, IDC_TOTAL_PROGRESS_BAR,  PBM_STEPIT  ,NULL, 0);
-			label="DECOMPRESSING WITH:";
-			label+=AlgoManager->Algos[i]->getName();
-			SetDlgItemText( hProgressWnd,IDC_DOGroup,label.c_str());
-			std::string out=m_data->FolderPath;
-			out+="_upk_";
-			out+=AlgoManager->Algos[i]->m_Ext;
-			
-			std::string in=m_data->FolderPathOut;
-			in+=AlgoManager->Algos[i]->m_Ext;
-			unsigned int compressedsize=g_GetFileSize(in);
-			g_timer.Start();
-			
-			AlgoManager->Algos[i]->DeCompress(in,out);
-			g_timer.Stop();
-			fout<<"<b>Marime fisier comprimat(bytes)</b>:"<<compressedsize<<"<br>\n";
-			fout<<"<b>Rata compresie:</b>"<<(float)compressedsize/initialsize<<"<br>\n";
-			timeform="";
-			g_timer.GetFormattedCurrentTime(timeform);
-			fout<<"<b>Timp decompresie:</b>"<<timeform.c_str()<<"<br>\n";
-			SendDlgItemMessage( hProgressWnd, IDC_TOTAL_PROGRESS_BAR,  PBM_STEPIT  ,NULL, 0);
-			fout<<"<hr />";
+			if(!AlgoManager->Algos[i]->m_isLossy)
+			{
+				std::string label="COMPRESSING WITH:";
+				label+=AlgoManager->Algos[i]->getName();
+				fout<<"<h3>"<<AlgoManager->Algos[i]->getName().c_str()<<"</h3>"<<"\n";
+				SetDlgItemText( hProgressWnd,IDC_DOGroup,label.c_str());
+				g_timer.Start();
+				AlgoManager->Algos[i]->Compress(m_data->FolderPath,m_data->FolderPathOut);
+				g_timer.Stop();
+				std::string timeform="";
+				g_timer.GetFormattedCurrentTime(timeform);
+				fout<<"<b>Timp compresie</b>:"<<timeform.c_str()<<"<br>\n";
+				SendDlgItemMessage( hProgressWnd, IDC_TOTAL_PROGRESS_BAR,  PBM_STEPIT  ,NULL, 0);
+				label="DECOMPRESSING WITH:";
+				label+=AlgoManager->Algos[i]->getName();
+				SetDlgItemText( hProgressWnd,IDC_DOGroup,label.c_str());
+				std::string out=m_data->FolderPath;
+				out+="_upk_";
+				out+=AlgoManager->Algos[i]->m_Ext;
+
+				std::string in=m_data->FolderPathOut;
+				in+=AlgoManager->Algos[i]->m_Ext;
+				unsigned int compressedsize=g_GetFileSize(in);
+				g_timer.Start();
+
+				AlgoManager->Algos[i]->DeCompress(in,out);
+				g_timer.Stop();
+				fout<<"<b>Marime fisier comprimat(bytes)</b>:"<<compressedsize<<"<br>\n";
+				fout<<"<b>Rata compresie:</b>"<<(float)compressedsize/initialsize<<"<br>\n";
+				timeform="";
+				g_timer.GetFormattedCurrentTime(timeform);
+				fout<<"<b>Timp decompresie:</b>"<<timeform.c_str()<<"<br>\n";
+				SendDlgItemMessage( hProgressWnd, IDC_TOTAL_PROGRESS_BAR,  PBM_STEPIT  ,NULL, 0);
+				fout<<"<hr />";
+			}
 		}
 		fout<<"</div><div id=\"Footer\"><div id=\"Copywright\"> @2012 Radu Angelescu </div></div></div></body></html>";
 		fout.close();

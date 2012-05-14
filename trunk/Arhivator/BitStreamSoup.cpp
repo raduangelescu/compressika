@@ -283,7 +283,7 @@ void OutputBytes(unsigned char *bytes,int count)
  //appendez bufferul curent la un fisier
  void cBitStreamSoup::AppendToFile(cBitStreamSoup *fileBS)
  {
-	 for(int i = 0 ;i< m_crtBuffEl ; i++)
+	 for(unsigned int i = 0 ;i< m_crtBuffEl ; i++)
 	 {
 		fileBS->OutputBits(m_Buffer[i],8);
 	 }
