@@ -1,0 +1,1 @@
+The main known problem is that compressika can't compress pictures that have sizes that are not multiple of 4. (This constraint has to do with the current algorithm )

@@ -1,0 +1,1 @@
+This is a project that serves as an analysis tool for compression algorithms. The main goal is to develop a good lossy image compression algorithm with a fractal basis.
